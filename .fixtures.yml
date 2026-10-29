@@ -1,0 +1,4 @@
+---
+fixtures:
+  symlinks:
+    ai_bridge: "#{source_dir}"
