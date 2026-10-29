@@ -1,0 +1,14 @@
+---
+# Control-repo Hiera example: stay on OpenAI, just rename o4-mini -> a live model.
+ai_bridge::backend: openai
+ai_bridge::upstream_model: gpt-5-mini
+ai_bridge::upstream_api_key: >
+  ENC[PKCS7,MIIB...]
+ai_bridge::master_key: >
+  ENC[PKCS7,MIIB...]
+ai_bridge::tls_cert: |
+  -----BEGIN CERTIFICATE-----
+  ...
+  -----END CERTIFICATE-----
+ai_bridge::tls_key: >
+  ENC[PKCS7,MIIB...]

@@ -1,0 +1,10 @@
+---
+# Module-level defaults. Override in your control repo's Hiera, never here.
+# Secrets (master_key, upstream_api_key, tls_key) are deliberately NOT given
+# defaults: the catalog must fail to compile until you provide them encrypted.
+ai_bridge::backend: anthropic
+ai_bridge::upstream_model: claude-sonnet-4-5
+ai_bridge::exposed_model: o4-mini
+ai_bridge::listen_port: 4000
+ai_bridge::container_runtime: podman
+ai_bridge::drop_params: true

@@ -1,0 +1,42 @@
+<%- | String $exposed_model,
+      String $provider_model,
+      Optional[String] $key_env,
+      Optional[String] $upstream_base_url,
+      Hash[String, String] $extra_aliases,
+      Boolean $drop_params,
+      Integer $request_timeout,
+      Boolean $debug,
+| -%>
+# Managed by Puppet (ai_bridge). No secrets in this file: keys come from the env.
+model_list:
+  - model_name: <%= $exposed_model %>
+    litellm_params:
+      model: <%= $provider_model %>
+<% if $key_env { -%>
+      api_key: os.environ/<%= $key_env %>
+<% } -%>
+<% if $upstream_base_url { -%>
+      api_base: <%= $upstream_base_url %>
+<% } -%>
+<% $extra_aliases.each |$name, $target| { -%>
+  - model_name: <%= $name %>
+    litellm_params:
+      model: <%= $target %>
+<% if $key_env { -%>
+      api_key: os.environ/<%= $key_env %>
+<% } -%>
+<% if $upstream_base_url { -%>
+      api_base: <%= $upstream_base_url %>
+<% } -%>
+<% } -%>
+
+litellm_settings:
+  drop_params: <%= $drop_params %>
+  num_retries: 1
+  request_timeout: <%= $request_timeout %>
+  set_verbose: <%= $debug %>
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+  disable_spend_logs: true
+  disable_master_key_return: true

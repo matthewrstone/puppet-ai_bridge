@@ -1,0 +1,14 @@
+---
+# Control-repo Hiera example: PE AI Agent -> local Ollama model, fully air-gapped.
+ai_bridge::backend: ollama
+ai_bridge::upstream_model: 'qwen3:32b'          # must support tool calling
+ai_bridge::upstream_base_url: http://ollama.souldo.lan:11434
+ai_bridge::master_key: >
+  ENC[PKCS7,MIIB...]
+ai_bridge::request_timeout: 600                 # local models are slower
+ai_bridge::tls_cert: |
+  -----BEGIN CERTIFICATE-----
+  ...
+  -----END CERTIFICATE-----
+ai_bridge::tls_key: >
+  ENC[PKCS7,MIIB...]

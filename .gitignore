@@ -1,0 +1,12 @@
+.env
+*.jsonl
+spec/fixtures/modules/
+spec/fixtures/manifests/
+pkg/
+Gemfile.lock
+.rspec_system/
+tools/pe-capture/pe-capture
+litellm/tls/*
+!litellm/tls/.gitkeep
+litellm/capture/*
+!litellm/capture/.gitkeep

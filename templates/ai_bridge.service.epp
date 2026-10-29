@@ -1,0 +1,37 @@
+<%- | Enum['podman','docker'] $runtime,
+      String $unit_user,
+      String $install_dir,
+      String $image,
+      Integer $port,
+      Boolean $manage_tls,
+| -%>
+# Managed by Puppet (ai_bridge)
+[Unit]
+Description=ai_bridge - OpenAI-compatible model bridge for Puppet Enterprise AI Agent
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=<%= $unit_user %>
+Restart=always
+RestartSec=5
+TimeoutStartSec=300
+ExecStartPre=-/usr/bin/<%= $runtime %> rm -f ai_bridge
+ExecStartPre=/usr/bin/<%= $runtime %> pull <%= $image %>
+ExecStart=/usr/bin/<%= $runtime %> run --rm --name ai_bridge \
+  --read-only --tmpfs /tmp \
+  --cap-drop=ALL --security-opt=no-new-privileges \
+  --env-file=<%= $install_dir %>/ai_bridge.env \
+  -p <%= $port %>:<%= $port %> \
+  -v <%= $install_dir %>/config.yaml:/app/config.yaml:ro,Z \
+<% if $manage_tls { -%>
+  -v <%= $install_dir %>/tls:/app/tls:ro,Z \
+<% } -%>
+  <%= $image %> \
+  --config=/app/config.yaml --port=<%= $port %><% if $manage_tls { %> \
+  --ssl_certfile_path=/app/tls/server.crt --ssl_keyfile_path=/app/tls/server.key<% } %>
+
+ExecStop=/usr/bin/<%= $runtime %> stop -t 10 ai_bridge
+
+[Install]
+WantedBy=multi-user.target

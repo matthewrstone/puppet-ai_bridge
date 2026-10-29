@@ -1,0 +1,29 @@
+stages: [test]
+
+go-test:
+  stage: test
+  image: golang:1.24
+  script:
+    - cd tools/pe-capture
+    - test -z "$(gofmt -l .)"
+    - go vet ./...
+    - go test -race -cover ./...
+
+puppet-lint:
+  stage: test
+  image: puppet/pdk:latest
+  script:
+    - pdk validate --format text
+
+rspec-puppet:
+  stage: test
+  image: puppet/pdk:latest
+  script:
+    - pdk test unit --format text
+
+yaml-validate:
+  stage: test
+  image: python:3.12-slim
+  script:
+    - pip install -q pyyaml
+    - python -c "import yaml,glob;[yaml.safe_load(open(f)) for f in glob.glob('litellm/*.yml')+glob.glob('litellm/*.yaml')+glob.glob('examples/*.yaml')+['data/common.yaml']];print('yaml ok')"

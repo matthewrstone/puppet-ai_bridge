@@ -1,0 +1,62 @@
+# LiteLLM proxy config for ai_bridge — standalone / compose reference.
+# The Puppet module generates an equivalent file from Hiera; this one is for
+# quick manual testing. Pick ONE backend block for `o4-mini` and delete the rest,
+# or keep several under different model_name aliases.
+#
+# Docs: https://docs.litellm.ai/docs/proxy/configs
+
+model_list:
+  # ---- Backend: Anthropic (Claude) -------------------------------------------
+  - model_name: o4-mini                      # what Puppet Enterprise asks for
+    litellm_params:
+      model: anthropic/claude-sonnet-4-5     # what actually answers
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+  # ---- Backend: OpenAI (current model, pure rename) --------------------------
+  # - model_name: o4-mini
+  #   litellm_params:
+  #     model: openai/gpt-5-mini
+  #     api_key: os.environ/OPENAI_API_KEY
+
+  # ---- Backend: Ollama (local model in the homelab) --------------------------
+  # `ollama_chat/` (not `ollama/`) uses Ollama's /api/chat endpoint, which is the
+  # one that supports tool calling. Pick a model that handles tools well.
+  # - model_name: o4-mini
+  #   litellm_params:
+  #     model: ollama_chat/qwen3:32b
+  #     api_base: http://ollama.souldo.lan:11434
+
+  # ---- Backend: any OpenAI-compatible server (vLLM, LM Studio, llama.cpp, PAG)
+  # - model_name: o4-mini
+  #   litellm_params:
+  #     model: openai/Qwen/Qwen3-32B
+  #     api_base: http://vllm.souldo.lan:8000/v1
+  #     api_key: os.environ/UPSTREAM_API_KEY   # omit if the server has no auth
+
+  # Extra aliases are cheap — advertise more than one name so PE (or other
+  # clients) can be re-pointed without touching the bridge.
+  - model_name: claude
+    litellm_params:
+      model: anthropic/claude-sonnet-4-5
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+litellm_settings:
+  # PE talks to o4-mini as a *reasoning* model and may send reasoning_effort /
+  # max_completion_tokens / omit temperature. drop_params strips anything the
+  # chosen backend doesn't understand instead of returning a 400.
+  drop_params: true
+  # Never retry a request more than once; PE has its own timeouts.
+  num_retries: 1
+  request_timeout: 300
+  # Set to true only while troubleshooting; it logs full prompts.
+  set_verbose: false
+
+general_settings:
+  # This is the value you paste into the PE console's "API key" field.
+  master_key: os.environ/LITELLM_MASTER_KEY
+  # No DB, no UI, no spend tracking — keep the attack surface small.
+  disable_spend_logs: true
+  disable_master_key_return: true
+
+router_settings:
+  routing_strategy: simple-shuffle

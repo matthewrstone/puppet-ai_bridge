@@ -1,0 +1,48 @@
+# Standalone ai_bridge for fast testing without Puppet.
+#   cp .env.example .env && edit
+#   docker compose up -d      (or: podman compose up -d)
+#   curl -sk https://localhost:4000/v1/models -H "Authorization: Bearer $LITELLM_MASTER_KEY"
+services:
+  ai_bridge:
+    image: ghcr.io/berriai/litellm:main-stable
+    container_name: ai_bridge
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./config.yaml:/app/config.yaml:ro
+      - ./tls:/app/tls:ro            # put server.crt + server.key here
+    command:
+      - --config=/app/config.yaml
+      - --port=4000
+      - --ssl_certfile_path=/app/tls/server.crt
+      - --ssl_keyfile_path=/app/tls/server.key
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request,ssl;ctx=ssl._create_unverified_context();urllib.request.urlopen('https://localhost:4000/health/liveliness',context=ctx)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # Optional: run pe-capture as a tap in front of the bridge to see every request.
+  #   PE -> pe-capture:4001 -> ai_bridge:4000
+  pe_capture:
+    build: ../tools/pe-capture
+    profiles: ["capture"]
+    ports:
+      - "4001:4000"
+    volumes:
+      - ./capture:/data
+    command:
+      - -listen=:4000
+      - -log=/data/capture.jsonl
+      - -upstream=http://ai_bridge:4000
+    environment:
+      PE_CAPTURE_UPSTREAM_KEY: ${LITELLM_MASTER_KEY}
