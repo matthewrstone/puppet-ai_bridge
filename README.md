@@ -1,17 +1,24 @@
 # puppet-ai_bridge
 
-**Keep Puppet Enterprise's AI Agent working after the `o4-mini` deprecation — and point it at Claude, a current OpenAI model, Ollama, or anything OpenAI-compatible.**
+**Your infrastructure. Your choice of AI.**
 
-PE's AI Agent settings page only lets you set a URL and an API key; the model name `o4-mini` is hard-coded, and OpenAI has retired it:
+Connect Puppet Enterprise Infra Assist to the cloud or local models that fit your
+business, using LiteLLM as an OpenAI-compatible bridge.
 
-> Error saving settings: … Failed to validate AI provider connection: 404: The model `o4-mini` has been deprecated
+![User asks PE Infra Assist, which connects through LiteLLM powered by ai_bridge to a choice of Claude, OpenAI, Gemini, Ollama, Grok, Amazon Bedrock and other providers.](docs/images/pe-llm-choice.png)
 
-`ai_bridge` is a small sidecar (LiteLLM, run as a hardened container) that accepts requests for `o4-mini` and forwards them to the backend you choose. PE sees a normal OpenAI API. Nothing in PE is modified.
+[Download the slide-ready graphic](docs/images/pe-llm-choice.png) ·
+[Graphic notes](docs/images/README.md)
 
-```
-PE console ──https──▶ ai_bridge (:4000/v1) ──▶ Anthropic / OpenAI / Ollama / vLLM / LM Studio / PAG
-     "model": "o4-mini"            rewrites model, translates format, holds the real key
-```
+Keep the familiar PE experience while selecting an appropriate backend.
+`ai_bridge` deploys and configures LiteLLM to map the model name PE requests to
+your chosen model. Provider credentials stay on the bridge. Cloud APIs and local
+inference servers are options; available features depend on the selected model,
+provider, and LiteLLM version. Provider accounts and configuration are required.
+
+PE continues to use its configured OpenAI-compatible endpoint. Nothing in PE's
+application code is modified. See [PE 2026 compatibility](#pe-2026-compatibility)
+for model alias and response-format settings.
 
 ## Contents
 
