@@ -71,3 +71,13 @@ jobs:
         with:
           name: forge-candidate
           path: pkg/*.tar.gz
+  callback-runtime:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test real callbacks in reviewed LiteLLM image
+        run: >-
+          docker run --rm --entrypoint python
+          -v "$GITHUB_WORKSPACE:/workspace:ro"
+          ghcr.io/berriai/litellm@sha256:37e2dafb088a7723beb998590682957386dfc83ffea1848486f8e0e5cfac0b06
+          -B -m unittest discover -s /workspace/tests -p '*runtime.py'

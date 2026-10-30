@@ -24,6 +24,11 @@ class PersonalityRuntimeTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result['tools'], data['tools'])
         self.assertEqual(data, before)
 
+    async def test_real_proxy_acompletion_type_applies_style(self):
+        data = {'messages': [{'role': 'system', 'content': 'PE instructions'}]}
+        result = await proxy_handler.async_pre_call_hook(None, None, data, 'acompletion')
+        self.assertIn('Talk like a pirate', result['messages'][0]['content'])
+
     async def test_embeddings_and_missing_messages_are_unchanged(self):
         data = {'input': 'embed me'}
         self.assertIs(await proxy_handler.async_pre_call_hook(None, None, data, 'embedding'), data)

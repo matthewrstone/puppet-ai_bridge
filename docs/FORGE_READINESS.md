@@ -159,6 +159,6 @@ single-line and multiline Hiera examples and disabling behavior.
 
 Regression evidence: 32 catalog examples pass on Puppet 7.34.0 and 8.10.0;
 six pure-Python style tests cover message preservation, structured content,
-missing system messages and repeated application. Eleven tests in the pinned
+missing system messages and repeated application. Twelve tests in the pinned
 LiteLLM 1.106.6 image cover real callback API integration, coexistence with usage
 normalization, existing usage callbacks and Docker runtime unit cases.

@@ -10,7 +10,7 @@ class PersonalityStyle(CustomLogger):
         self.prompt = Path(__file__).with_name('personality.txt').read_text(encoding='utf-8')
 
     async def async_pre_call_hook(self, user_api_key_dict, cache, data, call_type):
-        if call_type != 'completion' or not isinstance(data.get('messages'), list):
+        if call_type not in {'completion', 'acompletion'} or not isinstance(data.get('messages'), list):
             return data
         return {**data, 'messages': styled_messages(data['messages'], self.prompt)}
 
