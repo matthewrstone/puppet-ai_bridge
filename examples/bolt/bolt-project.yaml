@@ -1,0 +1,4 @@
+---
+name: ai_bridge_deployment
+modulepath:
+  - modules

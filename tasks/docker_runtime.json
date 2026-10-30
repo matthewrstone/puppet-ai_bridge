@@ -1,0 +1,11 @@
+{
+  "description": "Check the existing Docker daemon, or explicitly install the distro Docker package on Ubuntu 22.04/24.04 or Debian 12. Requires Python 3 and root for installation.",
+  "input_method": "stdin",
+  "parameters": {
+    "install_docker": {
+      "description": "Install docker.io and enable/start Docker only when the docker executable is absent. Existing installations are checked, never replaced or restarted.",
+      "type": "Boolean",
+      "default": false
+    }
+  }
+}

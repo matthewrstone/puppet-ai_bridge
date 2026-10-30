@@ -1,6 +1,6 @@
 # Forge readiness assessment — 2026-10-30
 
-Verdict: candidate package builds; hold public release pending the gates below.
+Verdict: 0.1.2 candidate package builds; hold public release pending the gates below.
 This is a community module assessment, not Puppet Supported certification or a
 CIS/ISO compliance assertion. No MCP service is enabled by this change.
 
@@ -71,3 +71,14 @@ for this module and is excluded by PDK's package defaults.
 Sources: [Puppet publishing preparation](https://help.puppet.com/core/current/Content/PuppetCore/modules_publishing_prep.htm),
 [module metadata](https://help.puppet.com/core/current/Content/PuppetCore/modules_metadata.htm),
 [PDK command reference](https://help.puppet.com/pdk/current/topics/pdk_reference.htm).
+
+## 0.1.2 Bolt and sales assets
+
+The README now embeds a slide-ready PNG; provider examples are illustrative.
+The Bolt plan reuses the class, defaults to checking existing Docker, and accepts
+configuration as a Sensitive hash. The runtime task only bootstraps distro Docker
+with explicit consent on Ubuntu 22.04/24.04 and Debian 12. Five task tests and four
+plan tests cover the control flow. A parameter-helper test verifies both modes,
+0600 credential files, and no printed secrets. Plan/task discovery passes with Bolt 5.2.0.
+A fresh-host installation and real Bolt apply are still unverified release gates;
+mocked plan success is not deployment evidence. See [deployment instructions](BOLT_DEPLOYMENT.md).

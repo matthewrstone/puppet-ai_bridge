@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.2 — 2026-10-30
+
+- Add a sales overview graphic and concise provider-choice README introduction.
+- Add `ai_bridge::deploy` Bolt plan and `ai_bridge::docker_runtime` bootstrap/check task.
+- Keep existing Docker unchanged; optional distro Docker installation supports Ubuntu 22.04/24.04 and Debian 12.
+- Add protected-parameter deployment instructions, inventory examples and tests.
+
 ## 0.1.1 — 2026-10-30
 
 - Add opt-in PE token-usage normalization, including streaming response objects.

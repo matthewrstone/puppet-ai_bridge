@@ -10,15 +10,9 @@ business, using LiteLLM as an OpenAI-compatible bridge.
 [Download the slide-ready graphic](docs/images/pe-llm-choice.png) ·
 [Graphic notes](docs/images/README.md)
 
-Keep the familiar PE experience while selecting an appropriate backend.
-`ai_bridge` deploys and configures LiteLLM to map the model name PE requests to
-your chosen model. Provider credentials stay on the bridge. Cloud APIs and local
-inference servers are options; available features depend on the selected model,
-provider, and LiteLLM version. Provider accounts and configuration are required.
-
-PE continues to use its configured OpenAI-compatible endpoint. Nothing in PE's
-application code is modified. See [PE 2026 compatibility](#pe-2026-compatibility)
-for model alias and response-format settings.
+`ai_bridge` connects PE Infra Assist to your chosen cloud or local model through
+LiteLLM. [Deploy with Bolt](docs/BOLT_DEPLOYMENT.md), with Docker already installed
+or installed by the plan.
 
 ## Contents
 

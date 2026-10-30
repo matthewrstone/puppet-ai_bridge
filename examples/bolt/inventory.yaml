@@ -1,0 +1,10 @@
+---
+targets:
+  - name: ai_bridge_host
+    uri: ssh://bridge.example.net
+    config:
+      ssh:
+        user: ubuntu
+        private-key: ~/.ssh/id_ed25519
+        host-key-check: true
+        run-as: root

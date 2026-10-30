@@ -27,3 +27,11 @@ yaml-validate:
   script:
     - pip install -q pyyaml
     - python -c "import yaml,glob;[yaml.safe_load(open(f)) for f in glob.glob('litellm/*.yml')+glob.glob('litellm/*.yaml')+glob.glob('examples/*.yaml')+['data/common.yaml']];print('yaml ok')"
+
+python-unit:
+  stage: test
+  image: python:3.12-slim
+  script:
+    - python3 -B -m unittest discover -s tests -p test_pe_usage.py
+    - python3 -B -m unittest discover -s tests -p test_docker_runtime.py
+    - python3 -B -m unittest discover -s tests -p test_bolt_parameters.py
