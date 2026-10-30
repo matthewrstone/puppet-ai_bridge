@@ -29,7 +29,7 @@ exclusions. Existing configurable aliases are reused, not a new routing feature.
 
 1. Confirm a green GitHub Actions run on the actual repository. The new
    `.github/workflows/ci.yml` runs explicit Bundler validation and catalog tests on
-   Puppet 7/8, Bolt plan tests, Python/Go tests and PDK 3.8 packaging. PDK 3.8
+   Puppet 7/8, Bolt plan tests, Python/Go tests and reference module-builder packaging. PDK 3.8
    validate/test reject the module as not template-compatible; direct tools are
    the intentional alternative. No PDK compatibility claim is made. The legacy
    GitLab jobs now use the same direct validation instead of broken PDK commands.
@@ -90,7 +90,8 @@ mocked plan success is not deployment evidence. See [deployment instructions](BO
 
 The module intentionally retains its small hand-maintained Gemfile and specs
 instead of using `pdk convert`, which would replace repository scaffolding.
-PDK 3.8.0 remains the package builder; its successful build is not a PDK validate
+CI uses `puppet-modulebuilder` 2.1.0, the reference builder included in PDK.
+Local packaging also passes with PDK 3.8.0; its successful build is not a PDK validate
 result. Bundler resolves Puppet within the metadata range in separate 7/8 jobs.
 Bolt plan specs use RubyGems Bolt 4.0.0 (the latest published gem); workstation
 plan discovery also passed with packaged Bolt 5.2.0. Those are distinct artifacts.
