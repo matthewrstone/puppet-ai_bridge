@@ -80,7 +80,9 @@ The script refuses to overwrite existing credential files. To use Anthropic or
 OpenAI, set `backend`, `upstream_model`, and `upstream_api_key` in the protected
 configuration; remove the Ollama URL and update aliases to the correct
 `anthropic/model` or `openai/model`. For `openai_compatible`, provide its base
-URL and optional upstream key. `normalize_usage` is an opt-in PE compatibility
+URL and upstream key. With the pinned LiteLLM artifact, set a non-secret dummy
+key (for example `unused`) when the upstream requires no authentication; the
+OpenAI client otherwise fails before contacting that backend. `normalize_usage` is an opt-in PE compatibility
 workaround; zero detail counts represent unreported statistics.
 
 The pinned image above is the lab-tested artifact, not a promise of ongoing
@@ -161,9 +163,11 @@ checked locally. On 2026-10-30 the actual runtime task was also executed directl
 on a disposable Ubuntu 24.04 LXD VM: absent Docker with default parameters failed
 without installation, explicit installation returned `changed: true`, and a
 subsequent default invocation returned `changed: false` against Docker 29.1.3.
-This tests the real distro package/systemd path, but does not establish SSH
-transport, `apply_prep`, TLS, image startup or an end-to-end live Bolt plan apply;
-those remain release/UAT gates in the readiness report.
+A full Bolt 5.2.0 SSH plan then installed Puppet 8.10.0 and applied the bridge
+using the pinned image: initial apply changed 9 resources with zero failures, a
+backend URL change changed 3, and an identical repeat changed 0 (9 unchanged).
+The systemd service and container started. This does not establish TLS trust,
+real-model quality or PE browser UAT; those remain release gates.
 
 References: [Bolt plan functions](https://help.puppet.com/bolt/current/topics/plan_functions.htm)
 and [sensitive plan parameters](https://help.puppet.com/bolt/current/topics/writing_plans.htm).

@@ -27,7 +27,8 @@ exclusions. Existing configurable aliases are reused, not a new routing feature.
 
 ## Release gates
 
-1. Confirm a green GitHub Actions run on the actual repository. The new
+1. GitHub Actions passed all five jobs on commit `bc229f5`:
+   [verified run](https://github.com/matthewrstone/puppet-ai_bridge/actions/runs/41044101631). The new
    `.github/workflows/ci.yml` runs explicit Bundler validation and catalog tests on
    Puppet 7/8, Bolt plan tests, Python/Go tests and reference module-builder packaging. PDK 3.8
    validate/test reject the module as not template-compatible; direct tools are
@@ -83,8 +84,8 @@ configuration as a Sensitive hash. The runtime task only bootstraps distro Docke
 with explicit consent on Ubuntu 22.04/24.04 and Debian 12. Five task tests and four
 plan tests cover the control flow. A parameter-helper test verifies both modes,
 0600 credential files, and no printed secrets. Plan/task discovery passes with Bolt 5.2.0.
-A fresh-host installation and real Bolt apply are still unverified release gates;
-mocked plan success is not deployment evidence. See [deployment instructions](BOLT_DEPLOYMENT.md).
+A fresh Ubuntu 24.04 target and real Bolt apply now passed as recorded below;
+other platform combinations and PE UAT remain release gates. See [deployment instructions](BOLT_DEPLOYMENT.md).
 
 ## CI validation approach — 2026-10-30
 
@@ -113,3 +114,37 @@ The real `tasks/docker_runtime.py` was copied and run with JSON stdin:
 Docker was active under systemd. This establishes the runtime task's two modes
 on Ubuntu 24.04 only, not a full Bolt apply, bridge deployment, reboot, or the
 other OS/runtime combinations. No production target or MCP service was changed.
+
+The recorded existing-Docker result was repeated successfully through packaged
+Bolt 5.2.0 over native SSH with an ephemeral key and a host key obtained through
+trusted LXD access. CI's published reference builder produced the candidate
+archive as a workflow artifact. No archive was uploaded to Forge.
+
+Full packaged Bolt 5.2.0 SSH plan evidence on this VM: `apply_prep` installed
+Puppet 8.10.0; first apply changed 9 / failed 0, an upstream URL change changed
+3 / failed 0, and an identical repeat changed 0 / unchanged 9 / failed 0.
+The pinned-image service and container started. Environment credentials remained
+0600 root:root; config was 0640 root:root. TLS was disabled for this isolated
+synthetic-only test. This is not PE browser or real-model UAT.
+
+The synthetic OpenAI-compatible backend test also found that omitting the optional
+upstream key returns HTTP 500 in the pinned LiteLLM artifact: its OpenAI client
+requires a key even when the upstream does not authenticate. Supply a non-secret
+dummy key for such a backend until that compatibility behavior is resolved.
+
+After supplying a synthetic dummy upstream key, an authenticated request through
+the deployed bridge returned HTTP 200 with the local stub's exact synthetic
+response and usage (prompt 3, completion 4, total 7). This establishes a basic
+non-streaming OpenAI-compatible proxy round trip only. It does not validate a
+real LLM, tools, streaming, TLS, or PE's UI.
+
+The green CI candidate artifact SHA-256 was
+`646a3fb664281b3d1a213fb8053b3cb959cc95a70bcdfe8b4b9d4654a46dd6af`.
+Inspection found 51 archive entries, including runtime Python and the README PNG,
+with no specs, workflows, bytecode or fixture caches. Later documentation changes
+produce a different archive digest; always inspect the final release artifact.
+
+Removal via the same Bolt plan with `ensure: absent` changed 4 / failed 0.
+Verification confirmed an inactive service, no ai_bridge container, and absent
+install directory and systemd unit. The disposable VM was stopped afterward.
+Docker itself is intentionally retained by this externally managed-runtime path.
