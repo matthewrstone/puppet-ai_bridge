@@ -65,7 +65,7 @@ jobs:
         with:
           ruby-version: '3.2'
       - run: gem install puppet-modulebuilder --version 2.1.0 --no-document
-      - run: ruby -r puppet/modulebuilder -e 'Puppet::Modulebuilder::Builder.new(Dir.pwd, File.join(Dir.pwd, "pkg"), nil).build'
+      - run: ruby -r fileutils -r puppet/modulebuilder -e 'Puppet::Modulebuilder::Builder.new(Dir.pwd, File.join(Dir.pwd, "pkg"), nil).build'
       - uses: actions/upload-artifact@v4
         with:
           name: forge-candidate
