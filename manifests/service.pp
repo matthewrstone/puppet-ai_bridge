@@ -28,6 +28,7 @@ class ai_bridge::service {
         port            => $ai_bridge::listen_port,
         manage_tls      => $ai_bridge::manage_tls,
         normalize_usage => $ai_bridge::normalize_usage,
+        personality     => $ai_bridge::personality_prompt != undef,
     }),
     notify  => Exec['ai_bridge-systemd-reload'],
   }

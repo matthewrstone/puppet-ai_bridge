@@ -7,6 +7,7 @@
       Integer $request_timeout,
       Boolean $debug,
       Boolean $normalize_usage,
+      Boolean $personality,
 | -%>
 # Managed by Puppet (ai_bridge). No secrets in this file: keys come from the env.
 model_list:
@@ -32,8 +33,14 @@ model_list:
 <% } -%>
 
 litellm_settings:
+<% if $normalize_usage or $personality { -%>
+  callbacks:
 <% if $normalize_usage { -%>
-  callbacks: ["pe_compat.proxy_handler"]
+    - pe_compat.proxy_handler
+<% } -%>
+<% if $personality { -%>
+    - personality_callback.proxy_handler
+<% } -%>
 <% } -%>
   drop_params: <%= $drop_params %>
   num_retries: 1

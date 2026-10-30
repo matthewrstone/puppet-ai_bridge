@@ -151,3 +151,41 @@ Stops the service, removes the unit, config, env and TLS files. The container ru
 - Upgrade LiteLLM: change `ai_bridge::image` to a newer tag/digest, run Puppet.
 - Rotate the master key: new value in Hiera → Puppet → update PE console. Do PE immediately after; the old key stops working on restart.
 - Certificate renewal: update `tls_cert`/`tls_key` in Hiera (or wire `step ca renew` to write the files and `systemctl restart ai_bridge`; Puppet will leave matching content alone).
+
+## Response style through Hiera
+
+Set optional `ai_bridge::personality_prompt` in your node's Hiera data:
+
+```yaml
+ai_bridge::personality_prompt: 'Talk like a pirate'
+```
+
+Multiline text works too:
+
+```yaml
+ai_bridge::personality_prompt: |
+  Talk like a pirate.
+  Keep infrastructure advice clear and concise.
+```
+
+The default is unset. The module writes this text to a read-only container mount
+and enables a LiteLLM chat-completion callback. It appends a style supplement to
+the first existing system message, preserving that message's original content
+and every other message, tool definition and request field. If there is no system
+message, it adds one before the existing conversation. It supports string and
+text-block system content. The text is data, never executed as Python or shell.
+
+This is a model instruction, not an access-control mechanism or a guarantee of
+tone. It grants no tool permissions and does not change PE approval settings.
+Keep it about style; existing PE instructions and authorization requirements
+still apply. A model may follow style imperfectly. This setting affects all chat
+completion requests through this bridge, including streaming requests; it does
+not alter embeddings. It can be combined with `ai_bridge::normalize_usage: true`.
+It is intended for `/v1/chat/completions`, not the separate Responses API.
+
+After changing Hiera, run Puppet on the bridge; the service restarts to load the
+new text. To disable it, remove the Hiera key (or set it to YAML `null`); Puppet
+removes the style files and disables that callback. Keep credentials out of the
+prompt. The file is not encrypted and upstream models receive its text. No debug
+logging is required. Pin and retest LiteLLM when changing images; callback API
+compatibility was tested with the lab's 1.106.6 image.

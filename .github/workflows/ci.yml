@@ -46,6 +46,7 @@ jobs:
           python-version: '3.12'
       - run: |
           python3 -B -m unittest discover -s tests -p test_pe_usage.py
+          python3 -B -m unittest discover -s tests -p test_personality.py
           python3 -B -m unittest discover -s tests -p test_docker_runtime.py
           python3 -B -m unittest discover -s tests -p test_bolt_parameters.py
       - uses: actions/setup-go@v5

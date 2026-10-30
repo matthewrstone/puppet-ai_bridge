@@ -5,6 +5,7 @@
       Integer $port,
       Boolean $manage_tls,
       Boolean $normalize_usage,
+      Boolean $personality,
 | -%>
 # Managed by Puppet (ai_bridge)
 [Unit]
@@ -28,10 +29,17 @@ ExecStart=/usr/bin/<%= $runtime %> run --rm --name ai_bridge \
 <% if $manage_tls { -%>
   -v <%= $install_dir %>/tls:/app/tls:ro,Z \
 <% } -%>
-<% if $normalize_usage { -%>
+<% if $normalize_usage or $personality { -%>
   --env PYTHONPATH=/app \
+<% } -%>
+<% if $normalize_usage { -%>
   -v <%= $install_dir %>/pe_compat.py:/app/pe_compat.py:ro,Z \
   -v <%= $install_dir %>/pe_usage.py:/app/pe_usage.py:ro,Z \
+<% } -%>
+<% if $personality { -%>
+  -v <%= $install_dir %>/personality.txt:/app/personality.txt:ro,Z \
+  -v <%= $install_dir %>/personality.py:/app/personality.py:ro,Z \
+  -v <%= $install_dir %>/personality_callback.py:/app/personality_callback.py:ro,Z \
 <% } -%>
   <%= $image %> \
   --config=/app/config.yaml --port=<%= $port %><% if $manage_tls { %> \

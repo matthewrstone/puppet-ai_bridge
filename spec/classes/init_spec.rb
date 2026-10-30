@@ -173,6 +173,52 @@ describe 'ai_bridge' do
     end
   end
 
+  context 'personality unset' do
+    let(:params) { base_params.merge('upstream_api_key' => sensitive('k')) }
+
+    it 'keeps personality disabled by default and removes stale style files' do
+      is_expected.to contain_file('/opt/ai_bridge/personality.txt').with_ensure('absent')
+      is_expected.to contain_file('/opt/ai_bridge/personality_callback.py').with_ensure('absent')
+      expect(catalogue.resource('file', '/opt/ai_bridge/config.yaml')[:content]).not_to include('personality_callback')
+      expect(catalogue.resource('file', '/etc/systemd/system/ai_bridge.service')[:content]).not_to include('personality.txt:/app/')
+    end
+  end
+
+  context 'personality and usage normalization enabled together' do
+    let(:params) do
+      base_params.merge('upstream_api_key' => sensitive('k'), 'container_runtime' => 'docker',
+        'normalize_usage' => true, 'personality_prompt' => "Talk like a pirate\nKeep answers concise.")
+    end
+
+    it 'ships style as data and mounts both callbacks read-only' do
+      is_expected.to compile.with_all_deps
+      is_expected.to contain_file('/opt/ai_bridge/personality.txt').with(
+        'content' => "Talk like a pirate\nKeep answers concise.", 'mode' => '0640', 'owner' => 'root', 'show_diff' => false,
+      )
+      is_expected.to contain_file('/opt/ai_bridge/personality_callback.py').with_source('puppet:///modules/ai_bridge/personality_callback.py')
+      is_expected.to contain_file('/opt/ai_bridge/personality.py').with_source('puppet:///modules/ai_bridge/personality.py')
+      config = catalogue.resource('file', '/opt/ai_bridge/config.yaml')[:content]
+      expect(config).to include('pe_compat.proxy_handler', 'personality_callback.proxy_handler')
+      expect(config).not_to include('Talk like a pirate')
+      unit = catalogue.resource('file', '/etc/systemd/system/ai_bridge.service')[:content]
+      %w[personality.txt personality.py personality_callback.py pe_compat.py pe_usage.py].each do |name|
+        expect(unit).to include("/opt/ai_bridge/#{name}:/app/#{name}:ro")
+      end
+      expect(unit.scan('--env PYTHONPATH=/app').length).to eq(1)
+    end
+  end
+
+  context 'personality without usage normalization' do
+    let(:params) { base_params.merge('upstream_api_key' => sensitive('k'), 'personality_prompt' => 'Talk like a pirate') }
+
+    it 'enables only the personality callback' do
+      config = catalogue.resource('file', '/opt/ai_bridge/config.yaml')[:content]
+      expect(config).to include('personality_callback.proxy_handler')
+      expect(config).not_to include('pe_compat.proxy_handler')
+      expect(catalogue.resource('file', '/etc/systemd/system/ai_bridge.service')[:content]).to include('--env PYTHONPATH=/app')
+    end
+  end
+
   context 'docker runtime' do
     let(:params) { base_params.merge('upstream_api_key' => sensitive('k'), 'container_runtime' => 'docker') }
 

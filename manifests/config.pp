@@ -51,6 +51,7 @@ class ai_bridge::config {
           request_timeout   => $ai_bridge::request_timeout,
           debug             => $ai_bridge::debug,
           normalize_usage   => $ai_bridge::normalize_usage,
+          personality       => $ai_bridge::personality_prompt != undef,
       }),
     }
 
@@ -68,6 +69,32 @@ class ai_bridge::config {
         group  => $user,
         mode   => '0644',
         source => 'puppet:///modules/ai_bridge/pe_usage.py',
+      }
+    }
+
+    if $ai_bridge::personality_prompt != undef {
+      file { "${install_dir}/personality.txt":
+        ensure    => file,
+        owner     => $user,
+        group     => $user,
+        mode      => '0640',
+        content   => $ai_bridge::personality_prompt,
+        show_diff => false,
+      }
+      ['personality.py', 'personality_callback.py'].each |$filename| {
+        file { "${install_dir}/${filename}":
+          ensure => file,
+          owner  => $user,
+          group  => $user,
+          mode   => '0644',
+          source => "puppet:///modules/ai_bridge/${filename}",
+        }
+      }
+    } else {
+      ['personality.txt', 'personality.py', 'personality_callback.py'].each |$filename| {
+        file { "${install_dir}/${filename}":
+          ensure => absent,
+        }
       }
     }
 

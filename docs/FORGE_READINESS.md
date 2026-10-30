@@ -1,6 +1,6 @@
 # Forge readiness assessment — 2026-10-30
 
-Verdict: 0.1.2 candidate package builds; hold public release pending the gates below.
+Verdict: 0.1.3 candidate package builds; hold public release pending the gates below.
 This is a community module assessment, not Puppet Supported certification or a
 CIS/ISO compliance assertion. No MCP service is enabled by this change.
 
@@ -148,3 +148,17 @@ Removal via the same Bolt plan with `ensure: absent` changed 4 / failed 0.
 Verification confirmed an inactive service, no ai_bridge container, and absent
 install directory and systemd unit. The disposable VM was stopped afterward.
 Docker itself is intentionally retained by this externally managed-runtime path.
+
+## 0.1.3 Hiera response style
+
+Optional `ai_bridge::personality_prompt` defaults to unset. It adds a plain-text
+style supplement to chat system instructions through a read-only callback and
+prompt file, preserving original messages and request fields. It is advisory
+model behavior, not a permission or approval control. See the user guide for
+single-line and multiline Hiera examples and disabling behavior.
+
+Regression evidence: 32 catalog examples pass on Puppet 7.34.0 and 8.10.0;
+six pure-Python style tests cover message preservation, structured content,
+missing system messages and repeated application. Eleven tests in the pinned
+LiteLLM 1.106.6 image cover real callback API integration, coexistence with usage
+normalization, existing usage callbacks and Docker runtime unit cases.

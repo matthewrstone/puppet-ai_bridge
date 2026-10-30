@@ -1,3 +1,9 @@
+## 0.1.3 (release candidate)
+
+- Add optional Hiera `personality_prompt` for chat response style, preserving
+  original messages and working alongside PE usage normalization.
+- Keep the default unset; mount style data and callback code read-only.
+
 # Changelog
 
 ## 0.1.2 — 2026-10-30

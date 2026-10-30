@@ -14,6 +14,10 @@ business, using LiteLLM as an OpenAI-compatible bridge.
 LiteLLM. [Deploy with Bolt](docs/BOLT_DEPLOYMENT.md), with Docker already installed
 or installed by the plan.
 
+Control response style through Hiera, for example
+`ai_bridge::personality_prompt: 'Talk like a pirate'`.
+See [personality settings](docs/USER_GUIDE.md#response-style-through-hiera).
+
 ## Contents
 
 | Path | What |
