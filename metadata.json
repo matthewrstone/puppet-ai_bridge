@@ -1,22 +1,59 @@
 {
   "name": "souldo-ai_bridge",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": "Matthew / Souldo Networks",
-  "summary": "OpenAI-compatible model bridge so Puppet Enterprise AI Agent can use Claude, current OpenAI models, Ollama or any OpenAI-compatible server despite the hard-coded o4-mini model name",
+  "summary": "OpenAI-compatible LiteLLM bridge for Puppet Enterprise AI model routing",
   "license": "Apache-2.0",
-  "source": "https://gitlab.souldo.cloud/puppet/puppet-ai_bridge",
-  "project_page": "https://gitlab.souldo.cloud/puppet/puppet-ai_bridge",
-  "issues_url": "https://gitlab.souldo.cloud/puppet/puppet-ai_bridge/-/issues",
+  "source": "https://github.com/matthewrstone/puppet-ai_bridge",
+  "project_page": "https://github.com/matthewrstone/puppet-ai_bridge",
+  "issues_url": "https://github.com/matthewrstone/puppet-ai_bridge/issues",
   "dependencies": [],
   "operatingsystem_support": [
-    { "operatingsystem": "RedHat", "operatingsystemrelease": ["9"] },
-    { "operatingsystem": "Rocky", "operatingsystemrelease": ["9"] },
-    { "operatingsystem": "AlmaLinux", "operatingsystemrelease": ["9"] },
-    { "operatingsystem": "Ubuntu", "operatingsystemrelease": ["22.04", "24.04"] },
-    { "operatingsystem": "Debian", "operatingsystemrelease": ["12"] }
+    {
+      "operatingsystem": "RedHat",
+      "operatingsystemrelease": [
+        "9"
+      ]
+    },
+    {
+      "operatingsystem": "Rocky",
+      "operatingsystemrelease": [
+        "9"
+      ]
+    },
+    {
+      "operatingsystem": "AlmaLinux",
+      "operatingsystemrelease": [
+        "9"
+      ]
+    },
+    {
+      "operatingsystem": "Ubuntu",
+      "operatingsystemrelease": [
+        "22.04",
+        "24.04"
+      ]
+    },
+    {
+      "operatingsystem": "Debian",
+      "operatingsystemrelease": [
+        "12"
+      ]
+    }
   ],
   "requirements": [
-    { "name": "puppet", "version_requirement": ">= 7.0.0 < 9.0.0" }
+    {
+      "name": "puppet",
+      "version_requirement": ">= 7.0.0 < 9.0.0"
+    }
   ],
-  "tags": ["puppet enterprise", "ai", "litellm", "openai", "anthropic", "ollama", "proxy"]
+  "tags": [
+    "puppet",
+    "ai",
+    "litellm",
+    "openai",
+    "anthropic",
+    "ollama",
+    "proxy"
+  ]
 }

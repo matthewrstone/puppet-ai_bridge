@@ -158,8 +158,31 @@ describe 'ai_bridge' do
     end
   end
 
+  context 'PE usage compatibility enabled' do
+    let(:params) { base_params.merge('upstream_api_key' => sensitive('k'), 'container_runtime' => 'docker', 'normalize_usage' => true) }
+
+    it 'ships the read-only compatibility callback and enables it' do
+      is_expected.to compile.with_all_deps
+      is_expected.to contain_file('/opt/ai_bridge/pe_compat.py').with_source('puppet:///modules/ai_bridge/pe_compat.py')
+      is_expected.to contain_file('/opt/ai_bridge/pe_usage.py').with_source('puppet:///modules/ai_bridge/pe_usage.py')
+      config = catalogue.resource('file', '/opt/ai_bridge/config.yaml')[:content]
+      expect(config).to include('pe_compat.proxy_handler')
+      unit = catalogue.resource('file', '/etc/systemd/system/ai_bridge.service')[:content]
+      expect(unit).to include('/opt/ai_bridge/pe_compat.py:/app/pe_compat.py:ro')
+      expect(unit).to include('/opt/ai_bridge/pe_usage.py:/app/pe_usage.py:ro')
+    end
+  end
+
   context 'docker runtime' do
     let(:params) { base_params.merge('upstream_api_key' => sensitive('k'), 'container_runtime' => 'docker') }
+
+    it 'keeps Docker bind-mounted config and TLS readable without DAC capabilities' do
+      %w[/opt/ai_bridge /opt/ai_bridge/tls /opt/ai_bridge/config.yaml /opt/ai_bridge/ai_bridge.env /opt/ai_bridge/tls/server.key].each do |path|
+        is_expected.to contain_file(path).with_owner('root').with_group('root')
+      end
+      is_expected.to contain_file('/opt/ai_bridge/ai_bridge.env').with_mode('0600')
+      is_expected.to contain_file('/opt/ai_bridge/tls/server.key').with_mode('0600')
+    end
 
     it 'installs docker and uses docker run' do
       is_expected.to contain_package('docker').with_ensure('installed')

@@ -32,6 +32,8 @@
 #   "API key" field. Generate with `openssl rand -hex 32`. Must be `Sensitive`.
 # @param exposed_model
 #   The model name PE asks for. PE hard-codes `o4-mini`; change only if PE changes.
+# @param normalize_usage
+#   Opt-in PE usage-detail compatibility defaults; unreported detail fields become zero.
 # @param extra_aliases
 #   Additional `{ exposed_name => 'provider/model' }` entries, rendered verbatim
 #   as LiteLLM model strings (e.g. `{'o3' => 'anthropic/claude-opus-4-1'}`). They
@@ -83,6 +85,7 @@ class ai_bridge (
   Boolean                        $drop_params       = true,
   Integer[1]                     $request_timeout   = 300,
   Boolean                        $debug             = false,
+  Boolean                        $normalize_usage   = false,
   Boolean                        $manage_package    = true,
   Enum['running', 'stopped']     $service_ensure    = 'running',
 ) {

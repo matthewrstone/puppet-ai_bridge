@@ -1,0 +1,6 @@
+spec/fixtures/
+.planning/
+.git/
+pkg/
+**/__pycache__/
+*.pyc

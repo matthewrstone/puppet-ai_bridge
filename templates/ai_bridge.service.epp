@@ -4,6 +4,7 @@
       String $image,
       Integer $port,
       Boolean $manage_tls,
+      Boolean $normalize_usage,
 | -%>
 # Managed by Puppet (ai_bridge)
 [Unit]
@@ -26,6 +27,11 @@ ExecStart=/usr/bin/<%= $runtime %> run --rm --name ai_bridge \
   -v <%= $install_dir %>/config.yaml:/app/config.yaml:ro,Z \
 <% if $manage_tls { -%>
   -v <%= $install_dir %>/tls:/app/tls:ro,Z \
+<% } -%>
+<% if $normalize_usage { -%>
+  --env PYTHONPATH=/app \
+  -v <%= $install_dir %>/pe_compat.py:/app/pe_compat.py:ro,Z \
+  -v <%= $install_dir %>/pe_usage.py:/app/pe_usage.py:ro,Z \
 <% } -%>
   <%= $image %> \
   --config=/app/config.yaml --port=<%= $port %><% if $manage_tls { %> \

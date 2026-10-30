@@ -111,3 +111,39 @@ Built TDD, all tests green. Not yet pointed at a real PE — see `.planning/STAT
 ## License
 
 Apache-2.0
+
+## PE 2026 compatibility
+
+PE versions can request different model names. In the PE 2026 lab, requests used
+`gpt-5.4-mini`; configure an explicit alias while retaining the default `o4-mini`:
+
+```yaml
+ai_bridge::backend: ollama
+ai_bridge::upstream_model: gemma4:12b
+ai_bridge::upstream_base_url: http://ollama.example.net:11434
+ai_bridge::extra_aliases:
+  gpt-5.4-mini: ollama_chat/gemma4:12b
+ai_bridge::normalize_usage: true
+```
+
+`normalize_usage` defaults to `false`. Enable it when PE throws a null-pointer
+exception in `ConversationService.finalizeAssistantMessage` for missing token
+usage detail objects. It adds missing/null prompt and completion detail fields
+with zero defaults, preserving aggregate token counts, supplied detail counts,
+and response content. These defaults are compatibility values, not measured
+cache/audio/reasoning statistics. Responses without usage remain unchanged.
+The callback and its helpers are mounted read-only and loaded through `/app`.
+
+With Docker, bind-mounted configuration/TLS files are root-owned so the container
+can read them with all Linux capabilities dropped. Secrets remain mode `0600`;
+Podman uses the configured service account as before.
+
+Lab evidence: Ubuntu 24.04, Puppet 9.1.1, LiteLLM 1.106.6 and Gemma 4 12B.
+The PE API recorded response finalization after enabling this workaround.
+Visible clearing of the console's “Thinking” indicator remains unverified;
+previously stuck conversations may need a fresh chat. Puppet 9 is lab evidence,
+not yet an expanded published support requirement.
+
+Run pure Python tests with `python3 -m unittest discover -s tests -p test_pe_usage.py`.
+Runtime callback tests require the pinned LiteLLM environment; see
+[Forge readiness](docs/FORGE_READINESS.md) for commands and remaining release gates.

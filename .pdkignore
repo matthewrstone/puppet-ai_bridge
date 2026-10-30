@@ -1,0 +1,14 @@
+.git/
+.planning/
+spec/
+tests/
+pkg/
+Gemfile*
+Rakefile
+.gitlab-ci.yml
+.rspec
+.fixtures.yml
+**/__pycache__/**
+**/__pycache__
+**/*.pyc
+files/__pycache__/

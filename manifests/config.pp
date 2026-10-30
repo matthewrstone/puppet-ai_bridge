@@ -1,7 +1,10 @@
 # @summary Renders LiteLLM config, the secrets env file and TLS material.
 # @api private
 class ai_bridge::config {
-  $user        = $ai_bridge::user
+  $user        = $ai_bridge::container_runtime ? {
+    'docker' => 'root',
+    default  => $ai_bridge::user,
+  }
   $install_dir = $ai_bridge::install_dir
   $ensure      = $ai_bridge::ensure
 
@@ -47,7 +50,25 @@ class ai_bridge::config {
           drop_params       => $ai_bridge::drop_params,
           request_timeout   => $ai_bridge::request_timeout,
           debug             => $ai_bridge::debug,
+          normalize_usage   => $ai_bridge::normalize_usage,
       }),
+    }
+
+    if $ai_bridge::normalize_usage {
+      file { "${install_dir}/pe_compat.py":
+        ensure => file,
+        owner  => $user,
+        group  => $user,
+        mode   => '0644',
+        source => 'puppet:///modules/ai_bridge/pe_compat.py',
+      }
+      file { "${install_dir}/pe_usage.py":
+        ensure => file,
+        owner  => $user,
+        group  => $user,
+        mode   => '0644',
+        source => 'puppet:///modules/ai_bridge/pe_usage.py',
+      }
     }
 
     # ---- TLS -----------------------------------------------------------------

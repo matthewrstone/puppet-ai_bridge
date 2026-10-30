@@ -10,3 +10,6 @@ litellm/tls/*
 !litellm/tls/.gitkeep
 litellm/capture/*
 !litellm/capture/.gitkeep
+
+__pycache__/
+*.pyc

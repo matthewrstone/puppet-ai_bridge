@@ -3,6 +3,10 @@
 class ai_bridge::install {
   $user        = $ai_bridge::user
   $install_dir = $ai_bridge::install_dir
+  $file_owner  = $ai_bridge::container_runtime ? {
+    'docker' => 'root',
+    default  => $user,
+  }
 
   group { $user:
     ensure => present,
@@ -27,8 +31,8 @@ class ai_bridge::install {
 
   file { [$install_dir, "${install_dir}/tls"]:
     ensure => directory,
-    owner  => $user,
-    group  => $user,
+    owner  => $file_owner,
+    group  => $file_owner,
     mode   => '0750',
   }
 
