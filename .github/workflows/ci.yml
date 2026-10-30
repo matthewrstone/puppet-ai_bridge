@@ -1,0 +1,69 @@
+name: Module CI
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  puppet:
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        puppet: ['~> 7.0', '~> 8.0']
+    env:
+      PUPPET_GEM_VERSION: ${{ matrix.puppet }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+      - run: bundle exec puppet parser validate manifests/*.pp types/*.pp
+      - run: bundle exec puppet-lint --relative --fail-on-warnings manifests types plans
+      - run: bundle exec metadata-json-lint metadata.json
+      - run: bundle exec rake spec_prep
+      - run: bundle exec rspec spec/classes/init_spec.rb
+  bolt:
+    runs-on: ubuntu-24.04
+    env:
+      BOLT_TESTS: 'true'
+      PUPPET_GEM_VERSION: '~> 8.0'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+      - run: bundle exec rake spec_prep
+      - run: bundle exec rspec tests/bolt_deploy_spec.rb
+  helpers:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: |
+          python3 -B -m unittest discover -s tests -p test_pe_usage.py
+          python3 -B -m unittest discover -s tests -p test_docker_runtime.py
+          python3 -B -m unittest discover -s tests -p test_bolt_parameters.py
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: tools/pe-capture/go.mod
+          cache-dependency-path: tools/pe-capture/go.sum
+      - working-directory: tools/pe-capture
+        run: |
+          test -z "$(gofmt -l .)"
+          go vet ./...
+          go test -race -cover ./...
+  package:
+    runs-on: ubuntu-24.04
+    container: puppet/pdk:3.8.0
+    steps:
+      - uses: actions/checkout@v4
+      - run: pdk build --force
+      - uses: actions/upload-artifact@v4
+        with:
+          name: forge-candidate
+          path: pkg/*.tar.gz

@@ -27,9 +27,12 @@ exclusions. Existing configurable aliases are reused, not a new routing feature.
 
 ## Release gates
 
-1. Establish PDK compatibility and working CI on the actual GitHub repository.
-   Current `.gitlab-ci.yml` calls PDK validate/test without compatible module
-   metadata. Do not treat the build's success as a successful PDK validation run.
+1. Confirm a green GitHub Actions run on the actual repository. The new
+   `.github/workflows/ci.yml` runs explicit Bundler validation and catalog tests on
+   Puppet 7/8, Bolt plan tests, Python/Go tests and PDK 3.8 packaging. PDK 3.8
+   validate/test reject the module as not template-compatible; direct tools are
+   the intentional alternative. No PDK compatibility claim is made. The legacy
+   GitLab jobs now use the same direct validation instead of broken PDK commands.
 2. Test installation, second-run idempotence, restart-on-config-change and removal
    across claimed OS/Puppet/runtime combinations. Current metadata lists Puppet
    7/8 and multiple Linux families, while live evidence is Ubuntu/Docker/Puppet 9.
@@ -82,3 +85,30 @@ plan tests cover the control flow. A parameter-helper test verifies both modes,
 0600 credential files, and no printed secrets. Plan/task discovery passes with Bolt 5.2.0.
 A fresh-host installation and real Bolt apply are still unverified release gates;
 mocked plan success is not deployment evidence. See [deployment instructions](BOLT_DEPLOYMENT.md).
+
+## CI validation approach — 2026-10-30
+
+The module intentionally retains its small hand-maintained Gemfile and specs
+instead of using `pdk convert`, which would replace repository scaffolding.
+PDK 3.8.0 remains the package builder; its successful build is not a PDK validate
+result. Bundler resolves Puppet within the metadata range in separate 7/8 jobs.
+Bolt plan specs use RubyGems Bolt 4.0.0 (the latest published gem); workstation
+plan discovery also passed with packaged Bolt 5.2.0. Those are distinct artifacts.
+The optional real-LiteLLM callback tests require the reviewed image and are not
+included in the dependency-free Python CI job. Runtime and OS release gates above
+remain open until deployment evidence is recorded.
+
+## Disposable Docker runtime evidence — 2026-10-30
+
+A new LXD project `ai-bridge-validation` and Ubuntu 24.04 VM `docker-paths`
+were used, separate from the PE AI bridge. Image fingerprint:
+`a80e9c9fd0d484dec024da3e9e264bbad4ce159b5312d6e149ef6ad532e18e43`.
+The real `tasks/docker_runtime.py` was copied and run with JSON stdin:
+
+- `{}` on the fresh VM: exit 1, Docker-not-found error; no package installed.
+- `{"install_docker":true}`: exit 0, `changed: true`, Docker server 29.1.3.
+- `{}` again: exit 0, `changed: false`, Docker server 29.1.3.
+
+Docker was active under systemd. This establishes the runtime task's two modes
+on Ubuntu 24.04 only, not a full Bolt apply, bridge deployment, reboot, or the
+other OS/runtime combinations. No production target or MCP service was changed.

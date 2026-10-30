@@ -12,3 +12,4 @@ Rakefile
 **/__pycache__
 **/*.pyc
 files/__pycache__/
+.github/

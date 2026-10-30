@@ -13,13 +13,20 @@ puppet-lint:
   stage: test
   image: puppet/pdk:latest
   script:
-    - pdk validate --format text
+    - gem install bundler
+    - bundle install
+    - bundle exec puppet parser validate manifests/*.pp types/*.pp
+    - bundle exec puppet-lint --relative --fail-on-warnings manifests types plans
+    - bundle exec metadata-json-lint metadata.json
 
 rspec-puppet:
   stage: test
   image: puppet/pdk:latest
   script:
-    - pdk test unit --format text
+    - gem install bundler
+    - bundle install
+    - bundle exec rake spec_prep
+    - bundle exec rspec spec/classes/init_spec.rb
 
 yaml-validate:
   stage: test

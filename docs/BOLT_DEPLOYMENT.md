@@ -43,9 +43,8 @@ cp modules/ai_bridge/examples/bolt/inventory.yaml .
 printf '\nprivate/\n.bolt/\n' >> .gitignore
 ```
 
-Use a reviewed revision containing `plans/deploy.pp`; until these commits are
-pushed, copy the local module checkout into `modules/ai_bridge` instead of cloning
-the earlier remote revision. Keep the directory name **ai_bridge**, regardless of
+Use a reviewed revision containing `plans/deploy.pp`; pin the checkout to the
+reviewed commit before deploying. Keep the directory name **ai_bridge**, regardless of
 the Git repository's name. No external Puppet module dependency is required by
 this plan; Bolt supplies its apply helpers.
 
@@ -158,8 +157,13 @@ host before using it on a shared Docker server.
 Unit tests cover missing/existing Docker, explicit install consent, supported
 platform gating and daemon failure. Bolt plan tests cover default/explicit mode,
 missing-key rejection and stopping on runtime failure. Plan/task discovery was
-checked locally. Fresh-host Bolt installation and an end-to-end live plan apply
-have not yet been performed; they remain release/UAT gates in the readiness report.
+checked locally. On 2026-10-30 the actual runtime task was also executed directly
+on a disposable Ubuntu 24.04 LXD VM: absent Docker with default parameters failed
+without installation, explicit installation returned `changed: true`, and a
+subsequent default invocation returned `changed: false` against Docker 29.1.3.
+This tests the real distro package/systemd path, but does not establish SSH
+transport, `apply_prep`, TLS, image startup or an end-to-end live Bolt plan apply;
+those remain release/UAT gates in the readiness report.
 
 References: [Bolt plan functions](https://help.puppet.com/bolt/current/topics/plan_functions.htm)
 and [sensitive plan parameters](https://help.puppet.com/bolt/current/topics/writing_plans.htm).
