@@ -4,7 +4,7 @@ Start with `journalctl -u ai_bridge -n 200 --no-pager` and `curl -sk https://loc
 
 | Symptom | Likely cause | Fix |
 |---------|--------------|-----|
-| PE save fails: `PKIX path building failed` / `unable to find valid certification path` | PE's JVM doesn't trust the bridge cert | Issue the cert from a CA the JVM trusts (Puppet CA is the safe bet), or import your CA into the PE console truststore. Check with `curl` from the primary without `-k` |
+| PE save fails: `PKIX path building failed` / `unable to find valid certification path` | PE's JVM doesn't trust the bridge cert | Issue the cert from the Puppet CA that PE already runs (the recommended default; see USER_GUIDE §3), or use a publicly trusted cert. Only if you operate a private CA, import it into the PE console truststore. Check with `curl` from the primary without `-k` |
 | PE save fails: `Connection refused` | Service not running, wrong port, firewall | `systemctl status ai_bridge`; `ss -ltnp | grep 4000`; firewall rule from primary to bridge:4000 |
 | PE save fails: `401` | Master key in PE ≠ `master_key` in Hiera | Re-paste the key. Remember rotation requires updating PE too |
 | PE save fails: `404 model o4-mini` *through the bridge* | `exposed_model` changed, or LiteLLM config didn't render | `grep model_name /opt/ai_bridge/config.yaml`; `curl .../v1/models` |

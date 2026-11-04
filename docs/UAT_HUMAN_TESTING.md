@@ -115,7 +115,7 @@ cd tools/pe-capture && go build .
 |----------|-----|----------|
 | Provider key wrong | put a bad `upstream_api_key` in Hiera, run Puppet | PE shows an error on use; bridge log shows provider 401; PE console **save** may still succeed if it only validates `/v1/models` — note which |
 | Bridge down | `systemctl stop ai_bridge` | PE AI Agent shows a connection error, not a hang > 60 s |
-| Cert expired / untrusted | point PE at the bridge IP instead of FQDN | PE save fails with a TLS error (proves PE validates certs) |
+| Cert expired / untrusted (e.g. name not in the Puppet CA cert's alt names) | point PE at the bridge IP instead of FQDN | PE save fails with a TLS error (proves PE validates certs) |
 | Master key rotated | new `master_key` in Hiera, Puppet, don't update PE | PE gets 401 until the console key is updated |
 
 **Record**

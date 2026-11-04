@@ -60,7 +60,7 @@ Hiera (eyaml) → `Sensitive[String]` param → `.unwrap` inside the EPP call �
 | One class with a `backend` switch | one subclass per provider | Switching provider should be a data change, not a code/classification change. PE doesn't care |
 | Podman rootless by default | Docker | Smaller blast radius; Docker remains for hosts that already have it |
 | TLS in the bridge | Nginx/Caddy in front | Fewer moving parts; LiteLLM supports `--ssl_*` natively. A fronting proxy is trivially added later |
-| Cert/key as inputs | ACME/Step CA automation in-module | PKI-agnostic; Step CA renewal is a one-liner in a profile |
+| Cert/key as inputs | ACME/CA automation in-module | PKI-agnostic: works with the Puppet CA, a public CA or any other source; renewal automation belongs in a profile, not the module |
 | `drop_params: true` by default | strict | PE treats o4-mini as a reasoning model; strict mode would 400 on `reasoning_effort` against non-reasoning backends |
 
 ## Known unknowns (resolved by Test 1 in UAT)

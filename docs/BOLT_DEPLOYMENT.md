@@ -21,6 +21,9 @@ before retrying. The bridge's own container is managed/restarted by the module.
 - Targets need access to their approved package repositories and the selected
   container registry. The bridge needs access to the chosen LLM backend.
 - A certificate chain and matching key for the bridge hostname, trusted by PE.
+  If you do not run your own CA, issue it from the Puppet CA that PE already runs
+  (`puppetserver ca generate --certname <fqdn> --subject-alt-names <fqdn>`) or use
+  a publicly trusted certificate; see `docs/USER_GUIDE.md` section 3.
   The plan keeps TLS enabled by default. It does not issue certificates, configure
   DNS/firewalls, join PE, accept AI usage terms, or change PE's provider settings.
 - `apply_prep` installs Puppet Agent if it is missing, using Bolt's agent installer,

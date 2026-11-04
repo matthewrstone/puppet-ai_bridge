@@ -12,7 +12,7 @@ ai_bridge::extra_aliases:
   gpt-4o: anthropic/claude-sonnet-4-5
 ai_bridge::tls_cert: |
   -----BEGIN CERTIFICATE-----
-  ... issued by Step CA for ai-bridge.souldo.lan ...
+  ... issued by the Puppet CA for ai-bridge.example.com ...
   -----END CERTIFICATE-----
 ai_bridge::tls_key: >
   ENC[PKCS7,MIIB...private key...]

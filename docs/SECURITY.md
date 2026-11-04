@@ -15,7 +15,7 @@ So: treat the bridge host like the PE primary, not like a random utility VM.
 | Secrets in the catalog / reports / diffs | All keys typed `Sensitive`; env file written from `Sensitive` content with `show_diff => false`; the catalog still contains them (as all Puppet secrets do) — restrict PuppetDB/console access accordingly |
 | Secrets on disk | `/opt/ai_bridge/ai_bridge.env` and `tls/server.key` are `0600`, owned by the `ai_bridge` system user (`nologin`). `config.yaml` contains only `os.environ/` references |
 | Unauthenticated use | `master_key` is mandatory; LiteLLM rejects requests without the bearer. The capture tool also supports `-require-key` |
-| Eavesdropping between PE and bridge | TLS terminated in the bridge; `manage_tls: false` exists for lab use only and the catalog fails if TLS is on without material |
+| Eavesdropping between PE and bridge | TLS terminated in the bridge with a cert from the Puppet CA or a public CA (no private CA required); `manage_tls: false` exists for lab use only and the catalog fails if TLS is on without material |
 | Container escape / privilege | `--read-only`, `--tmpfs /tmp`, `--cap-drop=ALL`, `--security-opt=no-new-privileges`; podman runs rootless as `ai_bridge` with its own sub-UID range. Docker mode runs the unit as root because the daemon socket requires it — prefer podman |
 | Supply chain | `image` defaults to `main-stable`; **pin a digest in production** (`ghcr.io/berriai/litellm@sha256:…`) and bump deliberately |
 | LiteLLM extras | No database, no UI, spend logs disabled, telemetry off (`LITELLM_TELEMETRY=False`), `disable_master_key_return` |

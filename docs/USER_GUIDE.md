@@ -18,23 +18,28 @@ This single value is both the bridge's `master_key` and what you paste into the 
 
 ## 3. Get a certificate
 
-PE's console backend is Java; it must trust the bridge's cert. Two easy paths:
+PE's console backend is Java; it must trust the bridge's cert. You do **not** need your own certificate authority. Every PE install already has one, so start there.
 
-**a. Your internal CA (Step CA, AD CS, …)** — issue a server cert for the bridge FQDN. If the PE JVM already trusts that CA, you're done.
-
-```sh
-step ca certificate ai-bridge.souldo.lan server.crt server.key --san ai-bridge.souldo.lan
-```
-
-**b. PE's own CA** — sign with the Puppet CA, which the PE console *definitely* trusts:
+**a. PE's own CA (recommended)** — sign with the Puppet CA that your PE installation already runs. PE components trust it by default, but see the VERIFY note below.
 
 ```sh
-# on the bridge host (a Puppet agent):
-puppetserver ca generate --certname ai-bridge.souldo.lan   # on the primary
-# cert lands in /etc/puppetlabs/puppet/ssl/certs/, key in private_keys/
+# on the PE primary:
+puppetserver ca generate --certname ai-bridge.example.com \
+  --subject-alt-names ai-bridge.example.com
+# the cert and key are written on the primary (see VERIFY below)
 ```
 
-Either way you end up with a PEM cert chain and a PEM key; those are `tls_cert` and `tls_key`.
+Use the same name here that you will type into the PE console URL, because the name in the URL must match the cert.
+
+<!-- VERIFY: exact output paths of `puppetserver ca generate` depend on the PE version and ssldir; and confirm which truststore PE's console/AI Agent JVM uses for outbound HTTPS and that it includes the Puppet CA. Previously this guide stated the console "definitely trusts" the Puppet CA, which cannot be confirmed from this repository. -->
+
+**b. A publicly trusted certificate (e.g. Let's Encrypt)** — only if the bridge has a public DNS name. Obtain the cert with your ACME client of choice and use the full chain. Public roots are generally already in Java truststores, but confirm that for your PE version.
+
+**c. An external TLS proxy** — terminate TLS on a load balancer or reverse proxy you already have, set `manage_tls: false`, and point PE at the proxy's HTTPS URL. The proxy-to-bridge hop is plain HTTP, so keep it on a private network.
+
+*If you already run an internal CA (Step CA, AD CS, …)*, that works too: issue a server cert for the bridge FQDN and make sure PE's JVM trusts the CA.
+
+For (a) and (b) you end up with a PEM cert chain and a PEM key; those are `tls_cert` and `tls_key`.
 
 If you cannot get a trusted cert quickly, set `manage_tls: false`, run the bridge on plain HTTP **on a private network only**, and test whether PE accepts an `http://` URL. Treat this as temporary.
 
@@ -150,7 +155,7 @@ Stops the service, removes the unit, config, env and TLS files. The container ru
 - Health: `curl -sk https://localhost:4000/health/liveliness`
 - Upgrade LiteLLM: change `ai_bridge::image` to a newer tag/digest, run Puppet.
 - Rotate the master key: new value in Hiera → Puppet → update PE console. Do PE immediately after; the old key stops working on restart.
-- Certificate renewal: update `tls_cert`/`tls_key` in Hiera (or wire `step ca renew` to write the files and `systemctl restart ai_bridge`; Puppet will leave matching content alone).
+- Certificate renewal: update `tls_cert`/`tls_key` in Hiera (Puppet will leave matching content alone, and restarts the service when the content changes). Put the renewal date in your calendar: a Puppet CA or ACME cert expiring silently is the most common cause of a sudden PE TLS error.
 
 ## Response style through Hiera
 
