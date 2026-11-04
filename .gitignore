@@ -13,3 +13,6 @@ litellm/capture/*
 
 __pycache__/
 *.pyc
+
+# GSD workflow scratch files
+.planning/tmp/
