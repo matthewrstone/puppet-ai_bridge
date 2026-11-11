@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-11-11
 **Current phase:** 5 — Field test (paused after Forge release)
-**Status:** active (0.1.5 prep)
+**Status:** 0.1.5 published to the Forge (see RELEASE-0.1.5.md); Phase 5 UAT items still open
 **Resume file:** .planning/.continue-here.md
 
 ## Where things stand
