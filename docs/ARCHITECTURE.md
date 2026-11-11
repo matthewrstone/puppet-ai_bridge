@@ -1,6 +1,8 @@
 <!-- generated-by: gsd-doc-writer -->
 # Architecture
 
+> **PE version note:** this document describes PE 2025.x, which hard-codes `o4-mini`. PE 2026.x also requests `gpt-5.4-mini` and `gpt-5.4` (the latter inside its PuppetDB tool, which sends tools together with a JSON-schema response format). The module serves those names by default (`manage_pe_aliases`) and offers `tool_call_compat` for the schema/tool interaction.
+
 This document describes how the `souldo-ai_bridge` module is put together and how a request travels through it. For the original problem statement and design rationale, see [DESIGN.md](DESIGN.md). For operating the bridge, see [USER_GUIDE.md](USER_GUIDE.md) and [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 
 ## System overview

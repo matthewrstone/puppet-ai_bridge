@@ -1,5 +1,7 @@
 # Design — ai_bridge
 
+> **PE version note:** this document describes PE 2025.x, which hard-codes `o4-mini`. PE 2026.x also requests `gpt-5.4-mini` and `gpt-5.4` (the latter inside its PuppetDB tool, which sends tools together with a JSON-schema response format). The module serves those names by default (`manage_pe_aliases`) and offers `tool_call_compat` for the schema/tool interaction.
+
 ## Problem statement
 
 PE's console backend builds OpenAI chat-completion requests with a hard-coded `model: "o4-mini"`. The only operator-controllable inputs are the base URL and the bearer token. OpenAI retired `o4-mini`, so the console's save-time validation gets a 404 and refuses the settings. Until PE makes the model name configurable, nothing in the console can fix this.

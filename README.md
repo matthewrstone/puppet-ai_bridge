@@ -1,38 +1,58 @@
-<!-- generated-by: gsd-doc-writer -->
-# puppet-ai_bridge
+# ai_bridge
 
 **Your infrastructure. Your choice of AI.**
 
-`souldo-ai_bridge` is a Puppet module that deploys an OpenAI-compatible bridge (LiteLLM in a container) so Puppet Enterprise Infra Assist (the PE AI Agent) can be answered by the cloud or local model that fits your business: Claude, OpenAI, Ollama, or any OpenAI-compatible server.
+#### Table of Contents
 
-![User asks PE Infra Assist, which connects through LiteLLM powered by ai_bridge to a choice of Claude, OpenAI, Gemini, Ollama, Grok, Amazon Bedrock and other providers.](docs/images/pe-llm-choice.png)
+1. [Description](#description)
+1. [Setup](#setup)
+1. [Usage](#usage)
+    - [Quick start](#quick-start)
+    - [PE versions and model names](#pe-versions-and-model-names)
+    - [TLS certificates](#tls-certificates)
+    - [Backends](#backends)
+    - [Optional compatibility settings](#optional-compatibility-settings)
+1. [Reference](#reference)
+1. [Limitations](#limitations)
+1. [Documentation](#documentation)
+1. [Development](#development)
 
-[Download the slide-ready graphic](docs/images/pe-llm-choice.png) ·
-[Graphic notes](docs/images/README.md)
+## Description
 
-![License](https://img.shields.io/badge/license-Apache--2.0-blue)
-![Version](https://img.shields.io/badge/module-0.1.3-informational)
+`souldo-ai_bridge` deploys an OpenAI-compatible bridge (LiteLLM in a container) so Puppet Enterprise Infra Assistant (the PE AI Agent) can be answered by the cloud or local model that fits your business: Claude, OpenAI, Ollama, or any OpenAI-compatible server.
 
-## Installation
+PE is configured with a URL and an API key and asks for a fixed OpenAI model name. The bridge accepts that name and forwards the request to the provider you choose.
 
-Add the module to your Puppetfile or install it from a checkout of
-[this repository](https://github.com/matthewrstone/puppet-ai_bridge):
+![User asks PE Infra Assist, which connects through LiteLLM powered by ai_bridge to a choice of Claude, OpenAI, Gemini, Ollama, Grok, Amazon Bedrock and other providers.](https://raw.githubusercontent.com/matthewrstone/puppet-ai_bridge/main/docs/images/pe-llm-choice.png)
+
+This is an experimental community module. It is not a Puppet Supported product. LiteLLM is downloaded separately as an upstream container; this module's Apache-2.0 license does not relicense LiteLLM, its enterprise components, or any backend model. See the [third-party notices](https://github.com/matthewrstone/puppet-ai_bridge/blob/main/docs/THIRD_PARTY_NOTICES.md).
+
+## Setup
+
+### Requirements
+
+- Puppet `>= 7.0.0 < 9.0.0` (catalog tests cover Puppet 7 and 8; Puppet 9 has been exercised in a lab only).
+- Ubuntu 24.04 with Docker (the tested path). Other operating systems and the default Podman runtime need deployment validation. For the tested path use `container_runtime: docker` and `manage_package: false` with an existing Docker.
+- No Puppet module dependencies.
+- A TLS certificate for the bridge host that PE's console trusts (see [TLS certificates](#tls-certificates)).
+
+### Installing
 
 ```bash
-git clone https://github.com/matthewrstone/puppet-ai_bridge.git
+puppet module install souldo-ai_bridge
 ```
 
-The module has no Puppet module dependencies. This experimental community release declares Ubuntu 24.04 and Puppet `>= 7.0.0 < 9.0.0`. Catalog tests cover Puppet 7/8; live deployment evidence covers Ubuntu 24.04 with Docker. Puppet 9 has been exercised in a lab only. Other operating systems and the default Podman path need deployment validation; use Docker with `manage_package: false` and an existing runtime for the tested path. This module is not a Puppet Supported product.
+or add it to your Puppetfile:
 
-Install from the Forge with `puppet module install souldo-ai_bridge`, or add `mod 'souldo-ai_bridge', '0.1.3'` to your Puppetfile once the release is published. The class remains `ai_bridge`.
+```ruby
+mod 'souldo-ai_bridge', '0.1.4'
+```
 
-PE 2026 acceptance testing remains incomplete. Field testing identified nested requests for `gpt-5.4` as well as `gpt-5.4-mini`; use the aliases and Ollama thinking setting below. Short completion probes passed with thinking disabled, but this is not a guarantee of complete PE tool-call and streaming compatibility. [Release validation](docs/FORGE_READINESS.md) records the evidence and remaining limits.
+The class is named `ai_bridge`. Prefer an agentless push? The module includes a Bolt plan; see the [Bolt deployment guide](https://github.com/matthewrstone/puppet-ai_bridge/blob/main/docs/BOLT_DEPLOYMENT.md).
 
-LiteLLM is downloaded separately as an upstream container. The module's Apache-2.0 license does not relicense LiteLLM, its enterprise components, or backend models. See [third-party notices](docs/THIRD_PARTY_NOTICES.md).
+## Usage
 
-Prefer an agentless push? [Deploy with Bolt](docs/BOLT_DEPLOYMENT.md), with Docker already installed or installed by the plan.
-
-## Quick start
+### Quick start
 
 1. Generate a master key. This becomes PE's "API key":
    ```bash
@@ -57,32 +77,52 @@ Prefer an agentless push? [Deploy with Bolt](docs/BOLT_DEPLOYMENT.md), with Dock
    - API key: the master key from step 1
    - Click **Update API settings**. No red banner means success.
 
-Switch backends by changing three Hiera keys. See `examples/` for Claude (`claude.yaml`), OpenAI (`openai.yaml`), Ollama (`ollama.yaml`) and Bolt (`examples/bolt/`). The full walk-through is in the [User guide](docs/USER_GUIDE.md).
+Switching providers means changing three Hiera keys (`backend`, `upstream_model`, and the key or URL). The [User guide](https://github.com/matthewrstone/puppet-ai_bridge/blob/main/docs/USER_GUIDE.md) has the full walk-through with Claude, OpenAI, Ollama, and Bolt examples.
 
-## TLS certificates
+### PE versions and model names
 
-PE's console must trust the certificate the bridge presents. The module does not issue certificates; it takes `tls_cert` (PEM certificate or chain, `String`) and `tls_key` (PEM private key, `Sensitive[String]`) as inputs and writes them to `<install_dir>/tls/server.crt` and `server.key`. Choose one of these:
+PE asks the bridge for fixed OpenAI model names, and the names differ by PE version:
 
-**1. The Puppet CA (recommended).** Every PE installation has one, and PE's own services already trust it. On the primary, issue a certificate for the bridge host's name, adding any extra DNS names you will use in the PE console URL:
+| PE version | Model names requested | Bridge setting |
+|------------|-----------------------|----------------|
+| 2025.x | `o4-mini` | Served by default (`exposed_model`) |
+| 2026.x | `gpt-5.4-mini` for chat, and `gpt-5.4` inside the PuppetDB query tool | Served by default (`manage_pe_aliases: true`) |
+
+By default the module exposes all three names and maps each to your `upstream_model`, so one bridge serves either PE version. Set `manage_pe_aliases: false` to expose only `exposed_model`. Entries in `extra_aliases` override the defaults.
+
+PE 2026 with Ollama also needs the two settings below. Without `tool_call_compat`, PE's PuppetDB queries can return invented answers (see [Optional compatibility settings](#optional-compatibility-settings)):
+
+```yaml
+ai_bridge::backend: ollama
+ai_bridge::upstream_model: gemma4:12b
+ai_bridge::upstream_base_url: http://ollama.example.net:11434
+ai_bridge::ollama_think: false
+ai_bridge::tool_call_compat: true
+ai_bridge::normalize_usage: true
+```
+
+PE 2026 acceptance testing is incomplete: the inventory-question path has passed on one lab (PE 2026.0.0, Ubuntu 24.04, Docker, Gemma 4 12B on Ollama), but provider switching, failure handling, and PE 2025.x behavior with this release have not been fully exercised. The [release validation notes](https://github.com/matthewrstone/puppet-ai_bridge/blob/main/docs/FORGE_READINESS.md) record the evidence and remaining limits.
+
+### TLS certificates
+
+PE's console must trust the certificate the bridge presents. The module does not issue certificates; it takes `tls_cert` (PEM certificate or chain) and `tls_key` (PEM private key, `Sensitive`) and writes them to `<install_dir>/tls/server.crt` and `server.key`. Choose one of these:
+
+**1. The Puppet CA (recommended).** Every PE installation has one. On the primary, issue a certificate for the bridge host's name, adding any extra DNS names you will use in the PE console URL:
 
 ```bash
 puppetserver ca generate --certname ai-bridge.example.com \
   --subject-alt-names ai-bridge.example.com,ai-bridge
 ```
 
-Copy the resulting certificate and private key (plus the Puppet CA certificate if you want to include the chain) into your Hiera data as `ai_bridge::tls_cert` and `ai_bridge::tls_key`. The hostname in the PE URL must match the certificate name or a subject alternative name.
-<!-- VERIFY: exactly which JVM/truststore the PE console uses to validate the bridge certificate, and whether it trusts the Puppet CA by default, is PE internals and cannot be confirmed from this repository -->
-<!-- VERIFY: the on-disk location where `puppetserver ca generate` leaves the certificate and key on the primary (docs/USER_GUIDE.md says /etc/puppetlabs/puppet/ssl/certs/ and private_keys/) is not confirmed by this repository's code -->
+Copy the resulting certificate and private key (plus the Puppet CA certificate if you want the chain) into Hiera as `ai_bridge::tls_cert` and `ai_bridge::tls_key`. The hostname in the PE URL must match the certificate name or a subject alternative name. Confirm that PE's console trusts the Puppet CA in your environment before relying on it (see the check below).
 
-**2. A publicly trusted certificate** such as one from ACME/Let's Encrypt. This needs a public DNS name for the bridge host. Feed the issued chain and key to the module the same way.
+**2. A publicly trusted certificate**, such as one from ACME/Let's Encrypt. This needs a public DNS name for the bridge host.
 
-**3. An external TLS-terminating proxy.** Set `manage_tls: false` so the bridge listens on plain HTTP, and put a proxy you already run in front of it. Use the proxy's HTTPS URL in PE. Keep the bridge's plain-HTTP port on a private network only.
+**3. An external TLS-terminating proxy.** Set `manage_tls: false` so the bridge listens on plain HTTP, and put a proxy you already run in front of it. Use the proxy's HTTPS URL in PE and keep the bridge's plain-HTTP port on a private network only.
 
-If you happen to operate an internal CA, a certificate from it works too, provided PE trusts that CA.
+A certificate from an internal CA works too, provided PE trusts that CA. Verify trust from the PE primary with `curl` (without `-k`) before saving in the console. If PE reports `PKIX path building failed`, see the [Troubleshooting guide](https://github.com/matthewrstone/puppet-ai_bridge/blob/main/docs/TROUBLESHOOTING.md).
 
-Verify trust from the primary with `curl` (without `-k`) before saving in the console. If PE reports `PKIX path building failed`, see [Troubleshooting](docs/TROUBLESHOOTING.md).
-
-## Backends
+### Backends
 
 | `backend` | `upstream_model` example | Needs | Notes |
 |-----------|--------------------------|-------|-------|
@@ -91,113 +131,59 @@ Verify trust from the primary with `curl` (without `-k`) before saving in the co
 | `ollama` | `qwen3:32b` | `upstream_base_url` (`http://host:11434`) | Uses `ollama_chat/` so tool calling works. Pick a tool-capable model |
 | `openai_compatible` | `Qwen/Qwen3-32B` | `upstream_base_url` (`http://host:8000/v1`), optional key | vLLM, LM Studio, llama.cpp, TGI, PAG |
 
-## Parameters
+Compilation fails with a clear message if `upstream_api_key` is missing for anthropic/openai, `upstream_base_url` is missing for ollama/openai_compatible, or `tls_cert`/`tls_key` are missing while `manage_tls` is true.
 
-| Parameter | Type | Default | Purpose |
-|-----------|------|---------|---------|
-| `master_key` | `Sensitive[String[1]]` | none (required) | Bearer token PE presents. Paste into PE's API key field |
-| `backend` | `Ai_bridge::Backend` | `anthropic` | Provider |
-| `upstream_model` | `String[1]` | `claude-sonnet-4-5` | Provider-side model name |
-| `upstream_api_key` | `Optional[Sensitive[String[1]]]` | `undef` | Provider key (required for anthropic/openai) |
-| `upstream_base_url` | `Optional[Ai_bridge::Url]` | `undef` | Provider URL (required for ollama/openai_compatible) |
-| `exposed_model` | `String[1]` | `o4-mini` | Name PE asks for |
-| `extra_aliases` | `Hash[String[1],String[1]]` | `{}` | More `{name => 'provider/model'}` entries |
-| `ollama_think` | `Optional[Boolean]` | `undef` | Override thinking on Ollama models and aliases; unset keeps upstream defaults |
-| `listen_port` | `Ai_bridge::Port` | `4000` | Listener port |
-| `manage_tls` | `Boolean` | `true` | Terminate TLS in the bridge |
-| `tls_cert` / `tls_key` | `Optional[String[1]]` / `Optional[Sensitive[String[1]]]` | `undef` | PEM contents (required when `manage_tls`) |
-| `container_runtime` | `podman`/`docker` | `podman` | Podman runs rootless as the service user |
-| `image` | `String[1]` | `ghcr.io/berriai/litellm:main-stable` | Pin a digest in prod |
-| `install_dir` | `Ai_bridge::Absolutepath` | `/opt/ai_bridge` | Config/env/TLS location |
-| `user` | `String[1]` | `ai_bridge` | System user that owns files (and runs the container with Podman) |
-| `drop_params` | `Boolean` | `true` | Strip params the provider rejects (`reasoning_effort` etc.) |
-| `request_timeout` | `Integer[1]` | `300` | Seconds; raise for slow local models |
-| `debug` | `Boolean` | `false` | `LITELLM_LOG=DEBUG`. Logs prompts, troubleshooting only |
-| `normalize_usage` | `Boolean` | `false` | Add zero defaults for missing token-usage detail fields (see below) |
-| `personality_prompt` | `Optional[String[1]]` | `undef` | Response style text appended to chat system instructions |
-| `manage_package` | `Boolean` | `true` | Install the container runtime package |
-| `service_ensure` | `running`/`stopped` | `running` | Service state when `ensure` is `present` |
-| `ensure` | `present`/`absent` | `present` | `absent` removes everything |
+### Optional compatibility settings
 
-Validation fails at compile time if `upstream_api_key` is missing for anthropic/openai, `upstream_base_url` is missing for ollama/openai_compatible, or `tls_cert`/`tls_key` are missing while `manage_tls` is true.
+All default to off (or unset) except `manage_pe_aliases`. Enable only what your PE and model need.
 
-## Response style through Hiera
+- **`tool_call_compat`**: PE's PuppetDB tool sends a tool definition and a strict JSON-schema response format in the same request. Some local models (observed with Gemma on Ollama) then fill in the schema directly and never call the tool, producing an invented answer. This setting withholds the schema until a tool result is present, so the model can call the tool; the schema is restored for the final answer.
+- **`normalize_usage`**: enable when PE throws a null-pointer exception in `ConversationService.finalizeAssistantMessage` for missing token-usage detail objects. It adds zero defaults for missing detail fields and leaves aggregate counts and content unchanged. The zeros are compatibility values, not measured statistics.
+- **`ollama_think`**: set `false` to turn off model "thinking" on Ollama models and aliases when replies come back empty or time out; leave unset to keep the upstream default. It applies only to `ollama_chat/` models.
+- **`personality_prompt`**: response style text appended to chat system instructions, for example `'Talk like a pirate'`. It is a style instruction, not an access-control mechanism.
+- **`debug`**: sets `LITELLM_LOG=DEBUG`, which logs prompts and tool results. Use it for troubleshooting only and turn it off afterwards.
 
-```yaml
-ai_bridge::personality_prompt: 'Talk like a pirate'
-```
+## Reference
 
-This is a model instruction, not an access-control mechanism. See [personality settings](docs/USER_GUIDE.md#response-style-through-hiera).
+The full parameter list, types, defaults, and data types are in [REFERENCE.md](https://github.com/matthewrstone/puppet-ai_bridge/blob/main/REFERENCE.md). The most commonly set parameters:
 
-## PE 2026 compatibility
+| Parameter | Default | Purpose |
+|-----------|---------|---------|
+| `master_key` | none (required) | Bearer token PE presents; paste into PE's API key field (`Sensitive`) |
+| `backend` / `upstream_model` | `anthropic` / `claude-sonnet-4-5` | Provider and its model name |
+| `upstream_api_key` / `upstream_base_url` | `undef` | Provider credentials or URL (required per backend) |
+| `exposed_model` | `o4-mini` | Primary name PE asks for |
+| `manage_pe_aliases` | `true` | Also serve `gpt-5.4-mini` and `gpt-5.4` |
+| `extra_aliases` | `{}` | More `{name => 'provider/model'}` entries; override the defaults |
+| `tool_call_compat` | `false` | Let tool-using models call tools under a JSON-schema request |
+| `container_runtime` | `podman` | `podman` or `docker`; Docker is the tested path |
+| `image` | `ghcr.io/berriai/litellm:main-stable` | Pin a digest in production |
+| `listen_port` | `4000` | Listener port |
+| `request_timeout` | `300` | Seconds; raise for slow local models |
 
-PE versions can request different model names. In the PE 2026 lab, requests used `gpt-5.4-mini` for chat and `gpt-5.4` inside the PuppetDB query tool. Configure both aliases while retaining the default `o4-mini`; a missing tool alias causes the query to fail even when chat itself works:
+## Limitations
 
-```yaml
-ai_bridge::backend: ollama
-ai_bridge::upstream_model: gemma4:12b
-ai_bridge::upstream_base_url: http://ollama.example.net:11434
-ai_bridge::ollama_think: false
-ai_bridge::extra_aliases:
-  gpt-5.4-mini: ollama_chat/gemma4:12b
-  gpt-5.4: ollama_chat/gemma4:12b
-ai_bridge::normalize_usage: true
-```
-
-`normalize_usage` defaults to `false`. Enable it when PE throws a null-pointer exception in `ConversationService.finalizeAssistantMessage` for missing token usage detail objects. It adds missing/null prompt and completion detail fields with zero defaults, preserving aggregate token counts, supplied detail counts, and response content. These defaults are compatibility values, not measured cache/audio/reasoning statistics. Responses without usage remain unchanged. The callback and its helpers are mounted read-only and loaded through `/app`.
-
-With Docker, bind-mounted configuration/TLS files are root-owned so the container can read them with all Linux capabilities dropped. Secrets remain mode `0600`; Podman uses the configured service account as before.
-
-Lab evidence: Ubuntu 24.04, Puppet 9.1.1, LiteLLM 1.106.6 and Gemma 4 12B. The PE API recorded response finalization after enabling this workaround. Visible clearing of the console's "Thinking" indicator remains unverified; previously stuck conversations may need a fresh chat.
-
-## Capturing what PE really sends
-
-Before trusting any config, run `pe-capture` for one console save and read `capture.jsonl`:
-
-```bash
-cd tools/pe-capture && go build .
-./pe-capture -listen :4000 -cert server.crt -key server.key -log capture.jsonl
-# point PE at https://<host>:4000/v1 with any API key, click Update API settings
-jq . capture.jsonl
-```
-
-It answers `/v1/models` and `/v1/chat/completions` convincingly enough for the console's validation to pass, and logs headers (credentials redacted) and bodies. Add `-upstream https://api.openai.com -upstream-key $OPENAI_API_KEY -rewrite-model o4-mini=gpt-5-mini` and it acts as a zero-dependency bridge for the OpenAI-to-OpenAI case.
-
-## Repository layout
-
-| Path | What |
-|------|------|
-| `manifests/`, `templates/`, `types/`, `files/` | Puppet module `souldo-ai_bridge` and its LiteLLM callbacks |
-| `plans/`, `tasks/`, `examples/bolt/` | Bolt deployment plan, runtime task and sample project |
-| `tools/pe-capture/` | Go tool that records exactly what PE sends (and can act as a minimal bridge itself) |
-| `litellm/` | Standalone `docker-compose.yml` and reference `config.yaml` for testing without Puppet |
-| `examples/` | Hiera examples for Claude, OpenAI and Ollama |
+- Experimental community release; not a Puppet Supported product.
+- Tested on Ubuntu 24.04 with Docker. The Podman path and other operating systems are untested.
+- PE acceptance is partial; see [PE versions and model names](#pe-versions-and-model-names).
+- Model quality is the provider's: small local models can misread tool results or ignore instructions even with the compatibility settings on.
+- The bridge relies on LiteLLM's request translation. Pin the container image to a reviewed digest in production.
 
 ## Documentation
 
-- [ELI10](docs/ELI10.md): the plain-language explanation
-- [User guide](docs/USER_GUIDE.md): step-by-step setup and day-2 operations
-- [Bolt deployment](docs/BOLT_DEPLOYMENT.md): agentless deployment
-- [Troubleshooting](docs/TROUBLESHOOTING.md): symptoms and fixes
-- [Security](docs/SECURITY.md): threat model and hardening
-- [Human UAT](docs/UAT_HUMAN_TESTING.md): tests that need a person and a real PE
-- [Design](docs/DESIGN.md): why it is built this way
-- [Forge readiness](docs/FORGE_READINESS.md): release gates and test commands
+All guides are in the [project repository](https://github.com/matthewrstone/puppet-ai_bridge/tree/main/docs) and ship inside the module package under `docs/`:
 
-## Testing
+- [ELI10](https://github.com/matthewrstone/puppet-ai_bridge/blob/main/docs/ELI10.md): the plain-language explanation
+- [User guide](https://github.com/matthewrstone/puppet-ai_bridge/blob/main/docs/USER_GUIDE.md): step-by-step setup and day-2 operations
+- [Bolt deployment](https://github.com/matthewrstone/puppet-ai_bridge/blob/main/docs/BOLT_DEPLOYMENT.md): agentless deployment
+- [Troubleshooting](https://github.com/matthewrstone/puppet-ai_bridge/blob/main/docs/TROUBLESHOOTING.md): symptoms and fixes
+- [Security](https://github.com/matthewrstone/puppet-ai_bridge/blob/main/docs/SECURITY.md): threat model and hardening
+- [Human UAT](https://github.com/matthewrstone/puppet-ai_bridge/blob/main/docs/UAT_HUMAN_TESTING.md): tests that need a person and a real PE
+- [Design](https://github.com/matthewrstone/puppet-ai_bridge/blob/main/docs/DESIGN.md): why it is built this way
+- [Release validation](https://github.com/matthewrstone/puppet-ai_bridge/blob/main/docs/FORGE_READINESS.md): release gates and test commands
 
-```bash
-cd tools/pe-capture && go test -race -cover ./...     # Go
-pdk validate && pdk test unit                          # Puppet (or: bundle exec rake spec)
-python3 -m unittest discover -s tests -p test_pe_usage.py   # pure Python
-```
+## Development
 
-Runtime callback tests require the pinned LiteLLM environment; see [Forge readiness](docs/FORGE_READINESS.md) for commands and remaining release gates.
+Source, issues, the `pe-capture` tool (records exactly what PE sends), a standalone LiteLLM compose example, and the test suite live in the [GitHub repository](https://github.com/matthewrstone/puppet-ai_bridge). See [DEVELOPMENT.md](https://github.com/matthewrstone/puppet-ai_bridge/blob/main/docs/DEVELOPMENT.md) for running the tests.
 
-## Status
-
-Built test-first and the automated tests are green. Final acceptance against a real PE console is tracked in [Human UAT](docs/UAT_HUMAN_TESTING.md).
-
-## License
-
-Apache-2.0. See [LICENSE](LICENSE).
+Licensed under [Apache-2.0](https://github.com/matthewrstone/puppet-ai_bridge/blob/main/LICENSE).

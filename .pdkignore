@@ -13,3 +13,4 @@ Rakefile
 **/*.pyc
 files/__pycache__/
 .github/
+.yardoc/

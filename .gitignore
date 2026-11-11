@@ -16,3 +16,4 @@ __pycache__/
 
 # GSD workflow scratch files
 .planning/tmp/
+.yardoc/

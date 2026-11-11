@@ -1,6 +1,6 @@
 # ai_bridge user guide
 
-For an SE or customer admin who needs the PE AI Agent working again, or wants it running against Claude / a local model. Assumes a PE 2025.x console with the **Puppet AI Agent** tab, a Linux host for the bridge, and a Puppet control repo with Hiera eyaml.
+For an SE or customer admin who needs the PE AI Agent working again, or wants it running against Claude / a local model. Assumes a PE 2025.x or 2026.x console with the **Puppet AI Agent** tab (PE 2025.x asks for `o4-mini`; PE 2026.x also asks for `gpt-5.4-mini` and `gpt-5.4`, which the module serves by default; see the README's PE versions table; PE 2026 with Ollama also wants `tool_call_compat: true`), a Linux host for the bridge, and a Puppet control repo with Hiera eyaml.
 
 ## 1. Pick a host
 

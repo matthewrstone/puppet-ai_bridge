@@ -4,3 +4,4 @@ spec/fixtures/
 pkg/
 **/__pycache__/
 *.pyc
+.yardoc/

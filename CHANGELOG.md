@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.1.4 — unreleased
+
+- Add `tool_call_compat` (default `false`): withhold a strict JSON-schema response format from
+  tool-enabled requests until a tool result is present, so local models (observed with Gemma on
+  Ollama) call PE's `runPqlQuery` tool instead of inventing PuppetDB answers. Needed for correct
+  PE 2026 inventory answers on such models.
+- Add `manage_pe_aliases` (default `true`): serve `gpt-5.4-mini` and `gpt-5.4` alongside
+  `exposed_model` (`o4-mini`), each mapped to the upstream model, so one bridge serves PE 2025.x
+  and 2026.x. `extra_aliases` entries override these. Existing deployments gain two aliases;
+  set `manage_pe_aliases: false` to keep the previous list.
+- Rewrite the README for the Puppet Forge (absolute links, Setup/Usage/Reference/Limitations
+  layout, PE version table) and add a generated `REFERENCE.md`.
+- Test gaps closed: non-Ollama primary never receives `think`; Bolt parameter test asserts the
+  `gpt-5.4-mini` alias.
+- Align `epp()` hash arguments with puppet-lint `strict_indent`.
+
 ## 0.1.3 — 2026-11-11
 
 - Publish package metadata for the `souldo/ai_bridge` Forge namespace.

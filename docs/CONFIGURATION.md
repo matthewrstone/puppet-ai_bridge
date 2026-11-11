@@ -52,7 +52,9 @@ Set these as `ai_bridge::<name>` keys in Hiera. Only `master_key` is required un
 | `upstream_api_key` | `Optional[Sensitive[String[1]]]` | `undef` | Conditional | Required for `anthropic` and `openai`. Optional for `openai_compatible`. Ignored for `ollama` |
 | `upstream_base_url` | `Optional[Ai_bridge::Url]` | `undef` | Conditional | Required for `ollama` (for example `http://host:11434`) and `openai_compatible` (for example `http://host:8000/v1`). Must match `http(s)://...` with no whitespace |
 | `master_key` | `Sensitive[String[1]]` | none | Yes | Token you paste into the PE console "API key" field. Generate with `openssl rand -hex 32` |
-| `exposed_model` | `String[1]` | `o4-mini` | No | Model name PE asks for. PE hard-codes `o4-mini`, so change it only if PE changes |
+| `exposed_model` | `String[1]` | `o4-mini` | No | Primary model name PE asks for. PE 2025.x hard-codes `o4-mini`; change it only if PE changes. PE 2026.x additionally asks for `gpt-5.4-mini` and `gpt-5.4` (see `manage_pe_aliases`) |
+| `manage_pe_aliases` | `Boolean` | `true` | No | Also expose `gpt-5.4-mini` and `gpt-5.4`, mapped to the same upstream model as `exposed_model`, so one bridge serves PE 2025.x and 2026.x. Entries in `extra_aliases` override them. `false` exposes only `exposed_model` |
+| `tool_call_compat` | `Boolean` | `false` | No | Withhold a strict JSON-schema `response_format` from tool-enabled requests until a tool result is present, so local models call PE's PuppetDB tool instead of inventing an answer. Enable for PE 2026 with Ollama |
 | `extra_aliases` | `Hash[String[1], String[1]]` | `{}` | No | Extra `exposed_name => 'provider/model'` entries, rendered verbatim as LiteLLM model strings |
 | `listen_port` | `Ai_bridge::Port` (1-65535) | `4000` | No | Port the bridge listens on. The PE URL is `https://<host>:<port>/v1` |
 | `manage_tls` | `Boolean` | `true` | No | Terminate TLS in the bridge. See [TLS parameters](#tls-parameters) |

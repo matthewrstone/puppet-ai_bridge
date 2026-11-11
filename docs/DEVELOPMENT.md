@@ -140,3 +140,40 @@ There is no `.github/PULL_REQUEST_TEMPLATE.md`; see also [CONTRIBUTING.md](../CO
 - Report bugs and request features at <https://github.com/matthewrstone/puppet-ai_bridge/issues>.
 
 The legacy `.gitlab-ci.yml` runs an equivalent subset (Go checks, lint, rspec-puppet, YAML validation, Python unit tests) for GitLab mirrors.
+
+## Repository layout
+
+| Path | What |
+|------|------|
+| `manifests/`, `templates/`, `types/`, `files/` | Puppet module `souldo-ai_bridge` and its LiteLLM callbacks |
+| `plans/`, `tasks/`, `examples/bolt/` | Bolt deployment plan, runtime task and sample project |
+| `tools/pe-capture/` | Go tool that records exactly what PE sends (and can act as a minimal bridge itself) |
+| `litellm/` | Standalone `docker-compose.yml` and reference `config.yaml` for testing without Puppet |
+| `examples/` | Hiera examples for Claude, OpenAI and Ollama |
+
+`tools/`, `litellm/`, `spec/` and `tests/` are not included in the Forge package.
+
+## Capturing what PE really sends
+
+Before trusting any config, run `pe-capture` for one console save and read `capture.jsonl`:
+
+```bash
+cd tools/pe-capture && go build .
+./pe-capture -listen :4000 -cert server.crt -key server.key -log capture.jsonl
+# point PE at https://<host>:4000/v1 with any API key, click Update API settings
+jq . capture.jsonl
+```
+
+It answers `/v1/models` and `/v1/chat/completions` convincingly enough for the console's validation to pass, and logs headers (credentials redacted) and bodies. Add `-upstream https://api.openai.com -upstream-key $OPENAI_API_KEY -rewrite-model o4-mini=gpt-5-mini` and it acts as a zero-dependency bridge for the OpenAI-to-OpenAI case.
+
+## Quick test commands
+
+```bash
+cd tools/pe-capture && go test -race -cover ./...                  # Go
+bundle exec rspec spec/classes                                      # catalog tests (separate process from Bolt specs)
+python3 -B -m unittest discover -s tests -p test_pe_usage.py        # pure Python (also test_personality.py, test_tool_call_compat.py)
+bundle exec puppet strings generate --format markdown --out REFERENCE.md   # regenerate the parameter reference
+```
+
+Runtime callback tests (`tests/*runtime.py`) need the pinned LiteLLM image; see [Forge readiness](FORGE_READINESS.md). This module is intentionally not PDK-converted, so `pdk validate` refuses to run; use `puppet-lint --relative --fail-on-warnings manifests types plans` and `metadata-json-lint metadata.json` instead.
+
