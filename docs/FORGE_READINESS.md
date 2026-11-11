@@ -204,7 +204,7 @@ normalization, existing usage callbacks and Docker runtime unit cases.
 ## 0.1.4 candidate (unreleased)
 
 Candidate archive `pkg/souldo-ai_bridge-0.1.4.tar.gz` built with `puppet-modulebuilder` 2.1.0:
-62 files, 1,227,307 bytes, SHA-256 `7dcb44cc940eace61d1404a6ade61c50ec817e5556218ae4b3042f431ff3094e`
+62 files, 1,227,959 bytes, SHA-256 `b76857adf945a76fa31491e427d9ca57f041e2d37e10acc65c0f3d556651935e`
 (rebuilt with `pdk build` after the PDK conversion; the file list is identical to the earlier
 modulebuilder candidate, and `metadata.json` gained PDK template keys; rebuilding changes this if any file changes). No `.pyc`, `._*`, `.yardoc`, planning, spec, test,
 credential or capture files in the archive; `REFERENCE.md` and the new callback files are present.

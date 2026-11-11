@@ -29,7 +29,10 @@
     "openai",
     "anthropic",
     "ollama",
-    "proxy"
+    "proxy",
+    "llm",
+    "puppet-enterprise",
+    "docker"
   ],
   "pdk-version": "4.0.1",
   "template-url": "pdk-default#4.0.1",
