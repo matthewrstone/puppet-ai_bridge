@@ -200,3 +200,21 @@ six pure-Python style tests cover message preservation, structured content,
 missing system messages and repeated application. Twelve tests in the pinned
 LiteLLM 1.106.6 image cover real callback API integration, coexistence with usage
 normalization, existing usage callbacks and Docker runtime unit cases.
+
+## 0.1.4 candidate (unreleased)
+
+Candidate archive `pkg/souldo-ai_bridge-0.1.4.tar.gz` built with `puppet-modulebuilder` 2.1.0:
+62 files, 1,227,096 bytes, SHA-256 `6b31f63bc34fc09b0c7e71cfbdcf23eec103af20054ae8fb2899c50cdcb34b3f`
+(rebuild changes this if any file changes). No `.pyc`, `._*`, `.yardoc`, planning, spec, test,
+credential or capture files in the archive; `REFERENCE.md` and the new callback files are present.
+
+Local gate: 44 catalog examples; 4 Bolt plan examples (`BOLT_TESTS=true`); Python unit suites
+(usage, personality, tool-call compat, Bolt parameters, Docker runtime); 14 real-callback runtime
+tests in the pinned LiteLLM image; Go race tests (80.1% coverage); `puppet parser validate`,
+`puppet epp validate`, `metadata-json-lint`; `puppet-lint --relative --fail-on-warnings` (with the
+strict_indent plugin loaded locally); `git diff --check`.
+
+Field evidence: the unreleased build ran on the lab (PE 2026.0.0, Gemma 4 12B on Ollama) with
+`tool_call_compat: true` and produced a correct inventory answer; see
+`.planning/FIELD-TEST-2026-11-11.md`. PE 2025.x behavior with this build, provider switching,
+failure injection and removal remain untested.
