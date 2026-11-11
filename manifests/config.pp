@@ -20,10 +20,10 @@ class ai_bridge::config {
       default => $ai_bridge::upstream_api_key.unwrap,
     }
     $env_content = epp('ai_bridge/ai_bridge.env.epp', {
-        master_key   => $ai_bridge::master_key.unwrap,
-        key_env      => $ai_bridge::key_env,
-        upstream_key => $upstream_key_value,
-        debug        => $ai_bridge::debug,
+      master_key   => $ai_bridge::master_key.unwrap,
+      key_env      => $ai_bridge::key_env,
+      upstream_key => $upstream_key_value,
+      debug        => $ai_bridge::debug,
     })
 
     file { "${install_dir}/ai_bridge.env":
@@ -35,6 +35,17 @@ class ai_bridge::config {
       show_diff => false,
     }
 
+    # ---- Model aliases: PE 2025 asks for o4-mini; PE 2026 also asks for gpt-5.4-mini / gpt-5.4 ----
+    $pe_aliases = $ai_bridge::manage_pe_aliases ? {
+      true    => {
+        'gpt-5.4-mini' => $ai_bridge::provider_model,
+        'gpt-5.4'      => $ai_bridge::provider_model,
+      }.filter |$name, $_target| { $name != $ai_bridge::exposed_model },
+      default => {},
+    }
+    # Operator-supplied aliases win over the PE defaults.
+    $aliases = $pe_aliases + $ai_bridge::extra_aliases
+
     # ---- LiteLLM config: no secret values, only os.environ/ references ----
     file { "${install_dir}/config.yaml":
       ensure  => file,
@@ -42,18 +53,18 @@ class ai_bridge::config {
       group   => $user,
       mode    => '0640',
       content => epp('ai_bridge/config.yaml.epp', {
-          exposed_model     => $ai_bridge::exposed_model,
-          provider_model    => $ai_bridge::provider_model,
-          key_env           => $ai_bridge::key_env,
-          upstream_base_url => $ai_bridge::upstream_base_url,
-          ollama_think      => $ai_bridge::ollama_think,
-          extra_aliases     => $ai_bridge::extra_aliases,
-          drop_params       => $ai_bridge::drop_params,
-          request_timeout   => $ai_bridge::request_timeout,
-          debug             => $ai_bridge::debug,
-          normalize_usage   => $ai_bridge::normalize_usage,
-          tool_call_compat  => $ai_bridge::tool_call_compat,
-          personality       => $ai_bridge::personality_prompt != undef,
+        exposed_model     => $ai_bridge::exposed_model,
+        provider_model    => $ai_bridge::provider_model,
+        key_env           => $ai_bridge::key_env,
+        upstream_base_url => $ai_bridge::upstream_base_url,
+        ollama_think      => $ai_bridge::ollama_think,
+        extra_aliases     => $aliases,
+        drop_params       => $ai_bridge::drop_params,
+        request_timeout   => $ai_bridge::request_timeout,
+        debug             => $ai_bridge::debug,
+        normalize_usage   => $ai_bridge::normalize_usage,
+        tool_call_compat  => $ai_bridge::tool_call_compat,
+        personality       => $ai_bridge::personality_prompt != undef,
       }),
     }
 

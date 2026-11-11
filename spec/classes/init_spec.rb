@@ -149,6 +149,7 @@ describe 'ai_bridge' do
         'backend' => 'ollama', 'upstream_model' => 'gemma4:12b',
         'upstream_base_url' => 'http://ollama.souldo.lan:11434',
         'extra_aliases' => { 'gpt-5.4' => 'ollama_chat/gemma4:12b', 'other' => 'openai/example' },
+        'manage_pe_aliases' => false,
       )
     end
 
@@ -177,6 +178,7 @@ describe 'ai_bridge' do
       base_params.merge(
         'upstream_api_key' => sensitive('k'), 'ollama_think' => false,
         'extra_aliases' => { 'local' => 'ollama_chat/gemma4:12b' },
+        'manage_pe_aliases' => false,
       )
     end
 
@@ -185,6 +187,19 @@ describe 'ai_bridge' do
       expect(models[0]['litellm_params']['model']).to start_with('anthropic/')
       expect(models[0]['litellm_params']).not_to have_key('think')
       expect(models[1]['litellm_params']['think']).to eq(false)
+    end
+  end
+
+  context 'Ollama thinking control applies to the default PE aliases' do
+    let(:params) do
+      base_params.merge('backend' => 'ollama', 'upstream_model' => 'gemma4:12b',
+                        'upstream_base_url' => 'http://ollama.souldo.lan:11434', 'ollama_think' => false)
+    end
+
+    it 'renders think on o4-mini, gpt-5.4-mini and gpt-5.4' do
+      models = YAML.safe_load(catalogue.resource('file', '/opt/ai_bridge/config.yaml')[:content])['model_list']
+      expect(models.map { |m| m['model_name'] }).to eq(%w[o4-mini gpt-5.4-mini gpt-5.4])
+      expect(models.map { |m| m['litellm_params']['think'] }).to eq([false, false, false])
     end
   end
 
@@ -224,6 +239,45 @@ describe 'ai_bridge' do
     it 'registers every callback exactly once' do
       callbacks = YAML.safe_load(catalogue.resource('file', '/opt/ai_bridge/config.yaml')[:content])['litellm_settings']['callbacks']
       expect(callbacks).to contain_exactly('pe_compat.proxy_handler', 'personality_callback.proxy_handler', 'tool_call_compat_callback.proxy_handler')
+    end
+  end
+
+  context 'PE model aliases' do
+    let(:params) { base_params.merge('upstream_api_key' => sensitive('k')) }
+
+    def model_list
+      YAML.safe_load(catalogue.resource('file', '/opt/ai_bridge/config.yaml')[:content])['model_list']
+    end
+
+    it 'serves the PE 2025 and PE 2026 model names by default, all pointing at the upstream model' do
+      expect(model_list.map { |m| m['model_name'] }).to eq(%w[o4-mini gpt-5.4-mini gpt-5.4])
+      expect(model_list.map { |m| m['litellm_params']['model'] }.uniq).to eq(['anthropic/claude-sonnet-4-5'])
+    end
+
+    context 'with manage_pe_aliases=false' do
+      let(:params) { super().merge('manage_pe_aliases' => false) }
+
+      it 'exposes only the primary name' do
+        expect(model_list.map { |m| m['model_name'] }).to eq(['o4-mini'])
+      end
+    end
+
+    context 'with an extra alias that overrides a default' do
+      let(:params) { super().merge('extra_aliases' => { 'gpt-5.4' => 'openai/gpt-5-mini', 'o3' => 'openai/o3' }) }
+
+      it 'lets the operator win without duplicating names' do
+        names = model_list.map { |m| m['model_name'] }
+        expect(names).to eq(%w[o4-mini gpt-5.4-mini gpt-5.4 o3])
+        expect(model_list.find { |m| m['model_name'] == 'gpt-5.4' }['litellm_params']['model']).to eq('openai/gpt-5-mini')
+      end
+    end
+
+    context 'with a custom exposed_model' do
+      let(:params) { super().merge('exposed_model' => 'gpt-5.4') }
+
+      it 'does not duplicate the primary name' do
+        expect(model_list.map { |m| m['model_name'] }).to eq(%w[gpt-5.4 gpt-5.4-mini])
+      end
     end
   end
 

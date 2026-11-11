@@ -37,6 +37,9 @@
 #   The model name PE asks for. PE hard-codes `o4-mini`; change only if PE changes.
 # @param normalize_usage
 #   Opt-in PE usage-detail compatibility defaults; unreported detail fields become zero.
+# @param manage_pe_aliases
+#   Also expose the model names newer PE releases request (`gpt-5.4-mini`, `gpt-5.4`), each mapped
+#   to the same upstream model as `exposed_model`. `extra_aliases` entries override these.
 # @param tool_call_compat
 #   Let models call tools when PE also sends a JSON-schema response format. Drops the
 #   schema from a request until a tool result is present. Enable for PE 2026 with Ollama.
@@ -95,6 +98,7 @@ class ai_bridge (
   Integer[1]                     $request_timeout   = 300,
   Boolean                        $debug             = false,
   Boolean                        $normalize_usage   = false,
+  Boolean                        $manage_pe_aliases = true,
   Boolean                        $tool_call_compat  = false,
   Optional[String[1]]            $personality_prompt = undef,
   Boolean                        $manage_package    = true,
