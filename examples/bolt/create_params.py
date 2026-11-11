@@ -19,7 +19,11 @@ parameters = {
         'backend': 'ollama',
         'upstream_model': 'gemma4:12b',
         'upstream_base_url': backend_url,
-        'extra_aliases': {'gpt-5.4-mini': 'ollama_chat/gemma4:12b'},
+        'extra_aliases': {
+            'gpt-5.4-mini': 'ollama_chat/gemma4:12b',
+            'gpt-5.4': 'ollama_chat/gemma4:12b',
+        },
+        'ollama_think': False,
         'normalize_usage': True,
         'image': 'ghcr.io/berriai/litellm@sha256:37e2dafb088a7723beb998590682957386dfc83ffea1848486f8e0e5cfac0b06',
         'manage_tls': True,

@@ -1,0 +1,59 @@
+# Field test — 2026-11-11
+
+Status: partial; Phase 5 remains open.
+
+## Automated checks
+
+- Go race tests passed, 80.1% statement coverage; go vet and gofmt checks passed.
+- Python helper tests: 17 passed.
+- Real LiteLLM callback tests: 12 passed in the CI-pinned image.
+- Puppet specs: 32 passed; Bolt specs: 4 passed, run in separate processes as in CI.
+- Puppet parser, puppet-lint, metadata-json-lint passed.
+- Six reference YAML files parsed successfully.
+- Combining Puppet and Bolt specs in one process produced one initial catalog compilation failure; separate CI-style runs passed.
+
+## Deployment and probes
+
+- SSH user: ubuntu. PE: pe-advanced-01.pg.souldo.cloud, version 2026.0.0.
+- Bridge: ai-bridge-01.pg.souldo.cloud; ai_bridge systemd service and Docker container running.
+- PE settings already point to https://ai-bridge-01.pg.souldo.cloud/v1. No settings changed.
+- Deployed aliases o4-mini and gpt-5.4-mini map to ollama_chat/gemma4:12b at http://192.168.1.214:11434.
+- PE host HTTPS probe validated the bridge certificate; unauthenticated model listing returned 401.
+- Bridge loopback health returned 200; authenticated model listing returned 200 and both aliases.
+- Initial bridge completion returned 200 after 87.3 seconds, empty content with a 32-token limit; usage detail fields present.
+- Direct Ollama request initially timed out after 20 seconds. User reported Ollama was coming back online.
+- After recovery, direct Ollama request with think=false returned OK in 1.9 seconds.
+- Bridge retry with a 512-token limit returned 200 after 12.6 seconds, empty content, finish_reason=length. This does not establish successful answer generation.
+- Bridge-local HTTPS probe failed because its hostname resolves locally to 127.0.1.1, while nginx listens on the LAN address; the PE-host HTTPS probe succeeded.
+
+## PE end-to-end result
+
+Submitted a read-only question asking the managed node count. Conversation ID:
+344af96f-7288-4c56-8e19-2fd1f57cefe2.
+
+The UI remained at Thinking. Infra Assistant logs recorded an OpenAIIoException caused by an InterruptedIOException timeout at 2026-11-11T10:35:52Z for this conversation. This attempt overlapped upstream recovery and is inconclusive for steady-state behavior.
+
+## Next checks
+
+1. Start a fresh PE conversation after upstream recovery and repeat the node-count question.
+2. Verify an actual tool result and compare it with the PE inventory (17 active nodes observed during this session).
+3. If replies remain empty or time out, inspect reasoning/token-limit handling and streaming behavior with the deployed model.
+4. Provider switching, Puppet convergence/idempotence, failure injection, removal, and real capture logging remain untested in this session.
+
+## Continuation: recovered-upstream tests
+
+- A bridge request with reasoning_effort=none returned BRIDGE_OK in 0.9 seconds. A request with reasoning_effort=high and think=false returned THINK_OFF_OK in 4.06 seconds. These request-only probes isolated a way to obtain usable replies without exhausting the token budget.
+- Fresh PE conversation 022e3003-57a0-402c-bcab-92ad8c8652b0 completed with a query-error answer. Despite the UI's successful-looking progress text, PE logs showed queryPuppetDB failed twice because its nested model request used gpt-5.4, which was absent from the bridge.
+- Added gpt-5.4 by copying the deployed gpt-5.4-mini mapping; retained a backup at /opt/ai_bridge/config.yaml.before-field-test-20261111T104408Z. Updated README's PE 2026 Hiera example with this alias.
+- Independently queried PuppetDB using the PE primary's existing client certificate: nodes[count()] {} returned [{"count":17}].
+- Conversation 2420b435-d922-49d2-9f46-e82498afa25b passed the model-alias boundary but ended with a PE stream timeout at 10:48:03Z. HTTP 200 alone did not establish completed streaming.
+- Set think=false on all three deployed Gemma aliases, retaining /opt/ai_bridge/config.yaml.before-think-off-20261111T105011Z. After restart, a request with high reasoning effort returned a complete CONFIG_OK reply in 7.89 seconds, confirming the deployed override worked for that probe.
+- Conversation ae1aeb84-4911-43fc-991b-bccb7e98291f was interrupted with HTTP 502. This does not evaluate the tuned configuration's steady-state end-to-end behavior: the scheduled Puppet agent compiled a catalog from pe-advanced-01, reverted config.yaml at 10:53:22Z, and restarted ai_bridge at 10:53:26Z. The service became active again at 10:53:47Z, with only o4-mini and gpt-5.4-mini and no think setting.
+
+## Durable fixes required before another full retest
+
+1. Put the gpt-5.4 alias in the bridge node's authoritative Hiera data, retaining gpt-5.4-mini and o4-mini.
+2. Add module support for an optional Ollama think setting and configure false for this Gemma deployment. The current EPP template has no parameter for this setting; direct config edits are reverted by Puppet.
+3. Apply Puppet, wait for API readiness, confirm a subsequent Puppet run is a no-op, then repeat the PE inventory test against the independent count of 17.
+
+No persistent live Puppet source changes were made. The scheduled agent restored its original model configuration. Phase 5 remains partial, not passed.

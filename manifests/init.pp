@@ -27,6 +27,9 @@
 # @param upstream_base_url
 #   Base URL of the provider. Required for ollama (e.g. `http://host:11434`) and
 #   openai_compatible (e.g. `http://host:8000/v1`).
+# @param ollama_think
+#   Optional Ollama thinking override for primary and alias Ollama models.
+#   Unset preserves upstream defaults; false disables thinking.
 # @param master_key
 #   The bearer token PE must present. This is what you paste into the PE console's
 #   "API key" field. Generate with `openssl rand -hex 32`. Must be `Sensitive`.
@@ -74,6 +77,7 @@ class ai_bridge (
   String[1]                      $upstream_model    = 'claude-sonnet-4-5',
   Optional[Sensitive[String[1]]] $upstream_api_key  = undef,
   Optional[Ai_bridge::Url]     $upstream_base_url = undef,
+  Optional[Boolean]              $ollama_think      = undef,
   String[1]                      $exposed_model     = 'o4-mini',
   Hash[String[1], String[1]]     $extra_aliases     = {},
   Ai_bridge::Port              $listen_port       = 4000,

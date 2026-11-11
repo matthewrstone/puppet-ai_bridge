@@ -143,6 +143,35 @@ describe 'ai_bridge' do
     end
   end
 
+  context 'Ollama thinking control' do
+    let(:params) do
+      base_params.merge(
+        'backend' => 'ollama', 'upstream_model' => 'gemma4:12b',
+        'upstream_base_url' => 'http://ollama.souldo.lan:11434',
+        'extra_aliases' => { 'gpt-5.4' => 'ollama_chat/gemma4:12b', 'other' => 'openai/example' },
+      )
+    end
+
+    it 'leaves thinking to the upstream when unset' do
+      models = YAML.safe_load(catalogue.resource('file', '/opt/ai_bridge/config.yaml')[:content])['model_list']
+      expect(models.map { |m| m['litellm_params'].key?('think') }).to eq([false, false, false])
+    end
+
+    [false, true].each do |value|
+      context "with ollama_think=#{value}" do
+        let(:params) { super().merge('ollama_think' => value) }
+
+        it 'applies the boolean to Ollama models and keeps other providers unchanged' do
+          models = YAML.safe_load(catalogue.resource('file', '/opt/ai_bridge/config.yaml')[:content])['model_list']
+          expect(models[0]['litellm_params']['think']).to eq(value)
+          expect(models[1]['model_name']).to eq('gpt-5.4')
+          expect(models[1]['litellm_params']['think']).to eq(value)
+          expect(models[2]['litellm_params']).not_to have_key('think')
+        end
+      end
+    end
+  end
+
   context 'extra aliases' do
     let(:params) do
       base_params.merge(

@@ -1,8 +1,46 @@
-# Forge readiness assessment — 2026-10-30
+# Forge readiness assessment — 2026-11-11
 
-Verdict: 0.1.3 candidate package builds; hold public release pending the gates below.
+Verdict: `souldo-ai_bridge` 0.1.3 is prepared as an experimental community
+release. Publication requires a Forge publishing key authorized for the requested
+namespace. PE acceptance testing has not passed; do not present this release as
+validated for production PE conversations or as commercially supported.
 This is a community module assessment, not Puppet Supported certification or a
 CIS/ISO compliance assertion. No MCP service is enabled by this change.
+
+## Current release evidence
+
+- 35 catalog examples pass on Puppet 7.34.0 and 8.10.0; four Bolt plan examples pass.
+- 17 Python helper tests and 12 tests in the CI-pinned LiteLLM image pass.
+- Go race tests pass with 80.1% statement coverage; parser, puppet-lint and
+  metadata-json-lint pass.
+- The package namespace is `souldo/ai_bridge`, version 0.1.3. The class
+  name remains `ai_bridge`.
+- The new optional `ollama_think` setting preserves upstream defaults when unset
+  and renders explicit true/false for Ollama primary models and aliases only.
+- PE 2026 nested PuppetDB requests require `gpt-5.4`, in addition to the observed
+  `gpt-5.4-mini` chat alias. The README and Bolt parameter helper include both.
+- OS metadata is narrowed to Ubuntu 24.04. The Docker path has the deployment
+  evidence below; Podman and other OS combinations remain unvalidated.
+- Full Apache-2.0 license text and third-party notices are included. LiteLLM source
+  and container images are not bundled.
+- Archive inspection excludes planning files, tests, fixtures, workflow files,
+  bytecode, symlinks and credential files; required runtime callbacks are present.
+
+## Known limitations for this experimental release
+
+The deployed lab returned complete short replies with thinking disabled, but
+full PE streaming/tool-call acceptance remains open. Scheduled Puppet runs
+reverted temporary lab changes and interrupted a retest; use authoritative Hiera
+and the new parameter rather than editing generated LiteLLM YAML.
+
+The default LiteLLM image tag is mutable. Pin the tested digest in deployments;
+callback compatibility must be checked when upgrading images. No upstream image
+security certification is implied by these functional tests. Rootless Podman,
+other operating systems, and a full real-provider matrix require further testing.
+
+The sections below retain historical test evidence and the original stable-release
+gates. Those uncompleted gates remain prerequisites to stronger production-readiness
+claims; this release makes the narrower experimental claims above.
 
 ## Included in 0.1.1
 

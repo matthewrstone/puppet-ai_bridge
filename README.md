@@ -22,7 +22,13 @@ Add the module to your Puppetfile or install it from a checkout of
 git clone https://github.com/matthewrstone/puppet-ai_bridge.git
 ```
 
-The module has no Puppet module dependencies. It supports RedHat/Rocky/AlmaLinux 9, Ubuntu 22.04/24.04 and Debian 12, and declares Puppet `>= 7.0.0 < 9.0.0` in `metadata.json`. Puppet 9 has been exercised in a lab only; it is not a published support requirement.
+The module has no Puppet module dependencies. This experimental community release declares Ubuntu 24.04 and Puppet `>= 7.0.0 < 9.0.0`. Catalog tests cover Puppet 7/8; live deployment evidence covers Ubuntu 24.04 with Docker. Puppet 9 has been exercised in a lab only. Other operating systems and the default Podman path need deployment validation; use Docker with `manage_package: false` and an existing runtime for the tested path. This module is not a Puppet Supported product.
+
+Install from the Forge with `puppet module install souldo-ai_bridge`, or add `mod 'souldo-ai_bridge', '0.1.3'` to your Puppetfile once the release is published. The class remains `ai_bridge`.
+
+PE 2026 acceptance testing remains incomplete. Field testing identified nested requests for `gpt-5.4` as well as `gpt-5.4-mini`; use the aliases and Ollama thinking setting below. Short completion probes passed with thinking disabled, but this is not a guarantee of complete PE tool-call and streaming compatibility. [Release validation](docs/FORGE_READINESS.md) records the evidence and remaining limits.
+
+LiteLLM is downloaded separately as an upstream container. The module's Apache-2.0 license does not relicense LiteLLM, its enterprise components, or backend models. See [third-party notices](docs/THIRD_PARTY_NOTICES.md).
 
 Prefer an agentless push? [Deploy with Bolt](docs/BOLT_DEPLOYMENT.md), with Docker already installed or installed by the plan.
 
@@ -96,6 +102,7 @@ Verify trust from the primary with `curl` (without `-k`) before saving in the co
 | `upstream_base_url` | `Optional[Ai_bridge::Url]` | `undef` | Provider URL (required for ollama/openai_compatible) |
 | `exposed_model` | `String[1]` | `o4-mini` | Name PE asks for |
 | `extra_aliases` | `Hash[String[1],String[1]]` | `{}` | More `{name => 'provider/model'}` entries |
+| `ollama_think` | `Optional[Boolean]` | `undef` | Override thinking on Ollama models and aliases; unset keeps upstream defaults |
 | `listen_port` | `Ai_bridge::Port` | `4000` | Listener port |
 | `manage_tls` | `Boolean` | `true` | Terminate TLS in the bridge |
 | `tls_cert` / `tls_key` | `Optional[String[1]]` / `Optional[Sensitive[String[1]]]` | `undef` | PEM contents (required when `manage_tls`) |
@@ -124,14 +131,16 @@ This is a model instruction, not an access-control mechanism. See [personality s
 
 ## PE 2026 compatibility
 
-PE versions can request different model names. In the PE 2026 lab, requests used `gpt-5.4-mini`; configure an explicit alias while retaining the default `o4-mini`:
+PE versions can request different model names. In the PE 2026 lab, requests used `gpt-5.4-mini` for chat and `gpt-5.4` inside the PuppetDB query tool. Configure both aliases while retaining the default `o4-mini`; a missing tool alias causes the query to fail even when chat itself works:
 
 ```yaml
 ai_bridge::backend: ollama
 ai_bridge::upstream_model: gemma4:12b
 ai_bridge::upstream_base_url: http://ollama.example.net:11434
+ai_bridge::ollama_think: false
 ai_bridge::extra_aliases:
   gpt-5.4-mini: ollama_chat/gemma4:12b
+  gpt-5.4: ollama_chat/gemma4:12b
 ai_bridge::normalize_usage: true
 ```
 

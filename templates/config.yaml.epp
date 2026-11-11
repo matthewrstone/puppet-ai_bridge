@@ -2,6 +2,7 @@
       String $provider_model,
       Optional[String] $key_env,
       Optional[String] $upstream_base_url,
+      Optional[Boolean] $ollama_think,
       Hash[String, String] $extra_aliases,
       Boolean $drop_params,
       Integer $request_timeout,
@@ -14,6 +15,9 @@ model_list:
   - model_name: <%= $exposed_model %>
     litellm_params:
       model: <%= $provider_model %>
+<% if $ollama_think != undef and $provider_model =~ /^ollama_chat\// { -%>
+      think: <%= $ollama_think %>
+<% } -%>
 <% if $key_env { -%>
       api_key: os.environ/<%= $key_env %>
 <% } -%>
@@ -24,6 +28,9 @@ model_list:
   - model_name: <%= $name %>
     litellm_params:
       model: <%= $target %>
+<% if $ollama_think != undef and $target =~ /^ollama_chat\// { -%>
+      think: <%= $ollama_think %>
+<% } -%>
 <% if $key_env { -%>
       api_key: os.environ/<%= $key_env %>
 <% } -%>

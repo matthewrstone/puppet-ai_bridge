@@ -32,6 +32,8 @@ class ParameterFileTests(unittest.TestCase):
                     self.assertEqual(stat.S_IMODE(path.stat().st_mode), 0o600)
                     self.assertEqual(data['config']['master_key'], 'test-master-secret')
                     self.assertEqual(data['config']['tls_key'], 'test-private-key')
+                    self.assertEqual(data['config']['extra_aliases']['gpt-5.4'], 'ollama_chat/gemma4:12b')
+                    self.assertIs(data['config']['ollama_think'], False)
                 self.assertNotIn('test-master-secret', output.getvalue())
                 self.assertNotIn('test-private-key', output.getvalue())
             finally:

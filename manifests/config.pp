@@ -46,6 +46,7 @@ class ai_bridge::config {
           provider_model    => $ai_bridge::provider_model,
           key_env           => $ai_bridge::key_env,
           upstream_base_url => $ai_bridge::upstream_base_url,
+          ollama_think      => $ai_bridge::ollama_think,
           extra_aliases     => $ai_bridge::extra_aliases,
           drop_params       => $ai_bridge::drop_params,
           request_timeout   => $ai_bridge::request_timeout,
