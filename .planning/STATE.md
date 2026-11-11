@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-11-11
 **Current phase:** 5 — Field test (paused after Forge release)
-**Status:** active (0.1.4 prep)
+**Status:** active (0.1.5 prep)
 **Resume file:** .planning/.continue-here.md
 
 ## Where things stand
@@ -28,12 +28,12 @@
 
 ## Update 2026-11-11 (late)
 
-- Root cause of PE's wrong node count found and fixed in the 0.1.4 dev build: PE's nested
+- Root cause of PE's wrong node count found and fixed in the 0.1.5 dev build: PE's nested
   PuppetDB call sends tools + strict json_schema; Ollama then never calls the tool. New
   `tool_call_compat` parameter (default false) drops the schema until a tool result exists.
   PE inventory-question acceptance passed on gemma4:12b with it enabled (see
-  FIELD-TEST-2026-11-11.md, continuation 3). Lab runs the unreleased 0.1.4 build.
-- 0.1.4 remaining: default PE model aliases, strict_indent lint fixes, Forge-ready README and
+  FIELD-TEST-2026-11-11.md, continuation 3). Lab runs the unreleased 0.1.5 build.
+- 0.1.5 remaining: default PE model aliases, strict_indent lint fixes, Forge-ready README and
   REFERENCE.md, CHANGELOG, version stamps, rebuild/verify tarball. Do not publish without approval.
 
 ## Next actions (superseded items kept for history)

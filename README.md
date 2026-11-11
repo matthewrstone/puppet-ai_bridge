@@ -45,7 +45,7 @@ puppet module install souldo-ai_bridge
 or add it to your Puppetfile:
 
 ```ruby
-mod 'souldo-ai_bridge', '0.1.4'
+mod 'souldo-ai_bridge', '0.1.5'
 ```
 
 The class is named `ai_bridge`. Prefer an agentless push? The module includes a Bolt plan; see the [Bolt deployment guide](https://github.com/matthewrstone/puppet-ai_bridge/blob/main/docs/BOLT_DEPLOYMENT.md).

@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.4 — 2026-11-11
+## 0.1.5 — 2026-11-11
 
 - Add `tool_call_compat` (default `false`): withhold a strict JSON-schema response format from
   tool-enabled requests until a tool result is present, so local models (observed with Gemma on

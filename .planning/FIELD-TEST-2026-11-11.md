@@ -89,6 +89,10 @@ so the model can call the tool; keep the schema once tool results are present.
 
 Debug reverted via Hiera (debug=false); converge applied, follow-up run idempotent.
 
+> **Naming note:** the "0.1.4" labels in continuations 3 and 4 below describe the lab builds as they were
+> named at the time. 0.1.4 was never published; the release was renamed **0.1.5** before publication.
+> The lab currently has the module installed under the 0.1.4 label (same code, older metadata/docs).
+
 ## Continuation 3: PE acceptance PASS with tool_call_compat (0.1.4 dev build)
 
 - Deployed the working-tree 0.1.4 build to pe-advanced-01 (backup:

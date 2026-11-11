@@ -201,10 +201,10 @@ missing system messages and repeated application. Twelve tests in the pinned
 LiteLLM 1.106.6 image cover real callback API integration, coexistence with usage
 normalization, existing usage callbacks and Docker runtime unit cases.
 
-## 0.1.4 candidate (unreleased)
+## 0.1.5 candidate (unreleased)
 
-Candidate archive `pkg/souldo-ai_bridge-0.1.4.tar.gz` built with `puppet-modulebuilder` 2.1.0:
-59 entries, 66,193 bytes, SHA-256 `dc8ad37306ebd57c709cd662fa28bc174a8a041f517f3c7e4eee8adb0ccc64b0`
+Candidate archive `pkg/souldo-ai_bridge-0.1.5.tar.gz` built with `puppet-modulebuilder` 2.1.0:
+59 entries, 66,269 bytes, SHA-256 `f1848c661643a3ddc579f7e885b538ed44b1e03cc8dacbb8e3f2d22baf7c354b`
 (rebuilt with `pdk build` after the PDK conversion; the file list matches the earlier
 candidate except that the README graphic (moved to `assets/`) is no longer packaged, and `metadata.json`
 gained PDK template keys; rebuilding changes this if any file changes). No `.pyc`, `._*`, `.yardoc`, planning, spec, test,
