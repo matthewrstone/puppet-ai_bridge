@@ -108,3 +108,21 @@ Debug reverted via Hiera (debug=false); converge applied, follow-up run idempote
 - Still open: provider switching, real capture logging, failure injection, removal, and the
   full PE 2025.x vs 2026.x model-name matrix. Phase 5 is therefore passed for the inventory
   tool path only, not complete.
+
+## Continuation 4: lab re-converged on the final 0.1.4 package; PE acceptance re-run PASS
+
+- Installed pkg/souldo-ai_bridge-0.1.4.tar.gz (SHA-256 b76857adf945a76fa31491e427d9ca57f041e2d37e10acc65c0f3d556651935e,
+  matches the local candidate) into pe-advanced-01 production via `puppet module install --force`
+  (backup: /root/ai_bridge-backups/20261111T220109Z-pre014-final). REFERENCE.md present, no stray files.
+- ai-bridge-01 converged with Hiera unchanged: exit 0, config.yaml checksum unchanged (c9c08c29...), no restart.
+  Then removed the redundant extra_aliases from the bridge eyaml so only the new manage_pe_aliases
+  default supplies gpt-5.4-mini/gpt-5.4: two runs exit 0, checksum still unchanged.
+- Bridge probes: /v1/models = o4-mini, gpt-5.4-mini, gpt-5.4; each answered (finish=stop);
+  tools+json_schema request returned tool_calls [runPqlQuery].
+- PE conversation 30af0823-c066-43b7-8da3-4223ef185b49, "How many nodes are managed?": answer 18 via
+  nodes[count()] {}; independent PuppetDB at 22:09Z: all 18, active 18. MATCH.
+  Bridge: 4 requests (main, nested tool call, nested after tool result, final), all 200; container
+  errors 0; PE infra-assistant.log ERROR/WARN since 22:09: 0. UI: thinking cleared, input re-enabled.
+- Lab effective config for this test: gemma4:12b, think=false, tool_call_compat=true,
+  normalize_usage=true, personality "Talk like a pirate", debug=false.
+- Still open: PE 2025.x behavior, provider switching, failure injection, removal, capture logging.
