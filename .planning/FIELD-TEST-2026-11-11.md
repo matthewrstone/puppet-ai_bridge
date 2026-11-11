@@ -57,3 +57,34 @@ The UI remained at Thinking. Infra Assistant logs recorded an OpenAIIoException 
 3. Apply Puppet, wait for API readiness, confirm a subsequent Puppet run is a no-op, then repeat the PE inventory test against the independent count of 17.
 
 No persistent live Puppet source changes were made. The scheduled agent restored its original model configuration. Phase 5 remains partial, not passed.
+
+## Continuation 2: durable deploy and root cause of the wrong node count
+
+Deployed durably (all via Puppet/Hiera, no hand edits to generated files):
+- Installed souldo-ai_bridge 0.1.3 into production on pe-advanced-01 (backup:
+  /root/ai_bridge-backups/20261111T152626Z). Added gpt-5.4 to extra_aliases and
+  ai_bridge::ollama_think=false in the bridge node's eyaml; ENC values untouched.
+- ai-bridge-01: run 1 applied config + restart (ready ~48s); run 2 was a no-op (exit 0).
+  /v1/models lists o4-mini, gpt-5.4-mini, gpt-5.4; each alias returned content, finish=stop.
+
+PE acceptance, "How many nodes are managed?":
+- Conversations 0925ea4b-a4c8-4ad9-bb7f-7af06f600d75 and bb172c21-ca8c-44ea-9512-4fcdb08b9a81.
+- Transport PASS: 5 bridge requests all 200, no errors, stream completed, input re-enabled,
+  no OpenAIIoException/timeout in infra-assistant.log.
+- Answer FAIL: both said "1 node". PuppetDB nodes[count()] = 17 (also 17 active);
+  PE Status page shows 18 active nodes (1 not reporting).
+
+Root cause (debug logging enabled temporarily, then reverted):
+- queryPuppetDB spawns a nested gpt-5.4 call carrying tool runPqlQuery AND a strict
+  response_format json_schema (PuppetDbAgentResponse). Gemma on Ollama never calls the tool
+  under that combination and fills the schema directly, inventing the count. Only one nested
+  POST occurred; the generated PQL was correct but never executed.
+- Probe through the bridge, same request shape: tools+json_schema -> no tool_calls,
+  invented text; tools only -> tool_calls=[runPqlQuery].
+- Not caused by personality_prompt, think=false or the aliases.
+
+Proposed fix (0.1.4): LiteLLM pre-call callback that, when a request has tools and a
+json_schema response_format and no tool-role message yet, drops response_format for that turn
+so the model can call the tool; keep the schema once tool results are present.
+
+Debug reverted via Hiera (debug=false); converge applied, follow-up run idempotent.
