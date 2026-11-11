@@ -81,7 +81,7 @@ docker run --rm --entrypoint python \
   -B -m unittest discover -s /workspace/tests -p '*runtime.py'
 ```
 
-The CI `package` job also builds a Forge candidate tarball with `puppet-modulebuilder` 2.1.0. Files that should not ship (for example `spec/`, `tests/`, `.github/`) are excluded through `.pdkignore` and `.pmtignore`; update those files if you add development-only paths.
+The CI `package` job also builds a Forge candidate tarball with `puppet-modulebuilder` 2.1.0. The builder is an allowlist (it ships only `manifests/`, `templates/`, `types/`, `files/`, `data/`, `plans/`, `tasks/`, `examples/`, `docs/`, `hiera.yaml`, `metadata.json`, `README*`, `CHANGELOG*`, `LICENSE` and `REFERENCE.md`) and does not read `.pdkignore` or `.pmtignore`; anything that must not ship belongs outside those paths.
 
 ## Coding standards
 

@@ -204,9 +204,10 @@ normalization, existing usage callbacks and Docker runtime unit cases.
 ## 0.1.4 candidate (unreleased)
 
 Candidate archive `pkg/souldo-ai_bridge-0.1.4.tar.gz` built with `puppet-modulebuilder` 2.1.0:
-62 files, 1,227,959 bytes, SHA-256 `b76857adf945a76fa31491e427d9ca57f041e2d37e10acc65c0f3d556651935e`
-(rebuilt with `pdk build` after the PDK conversion; the file list is identical to the earlier
-modulebuilder candidate, and `metadata.json` gained PDK template keys; rebuilding changes this if any file changes). No `.pyc`, `._*`, `.yardoc`, planning, spec, test,
+59 entries, 66,193 bytes, SHA-256 `dc8ad37306ebd57c709cd662fa28bc174a8a041f517f3c7e4eee8adb0ccc64b0`
+(rebuilt with `pdk build` after the PDK conversion; the file list matches the earlier
+candidate except that the README graphic (moved to `assets/`) is no longer packaged, and `metadata.json`
+gained PDK template keys; rebuilding changes this if any file changes). No `.pyc`, `._*`, `.yardoc`, planning, spec, test,
 credential or capture files in the archive; `REFERENCE.md` and the new callback files are present.
 
 Local gate: `pdk validate` (0 findings) and `pdk test unit` (45 examples) on PDK 4.0.1; CI-style runs of
@@ -225,8 +226,10 @@ failure injection and removal remain untested.
 
 The module was converted with PDK 4.0.1 so `pdk validate`, `pdk test unit` and `pdk build` work.
 `pdk convert` overwrites `.gitignore`, `.pdkignore` and the `Gemfile`, so the project's secret/capture
-ignores, package exclusions and test setup are declared in `.sync.yml` and `.rubocop_todo.yml`
-and verified after conversion (package file list unchanged). CI now sets
+ignores and test setup are declared in `.sync.yml` and `.rubocop_todo.yml` and verified after conversion
+(package file list unchanged). Package contents are controlled by the builder's allowlist, not by
+`.pdkignore`/`.pmtignore` (see DEVELOPMENT.md); the README graphic moved from `docs/images/` to `assets/`
+to keep it out of the package. CI now sets
 `BUNDLE_GEMSOURCE__PUBLIC=true` (and `BOLT_GEM_VERSION` for the Bolt job) because PDK 4's Gemfile
 otherwise requires puppetcore credentials. Catalog specs were autocorrected by RuboCop; several
 opinionated RSpec cops are disabled in `.rubocop_todo.yml` for catalog-style specs.

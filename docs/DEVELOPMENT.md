@@ -88,7 +88,7 @@ gem install puppet-modulebuilder --version 2.1.0 --no-document
 ruby -r fileutils -r puppet/modulebuilder -e 'Puppet::Modulebuilder::Builder.new(Dir.pwd, File.join(Dir.pwd, "pkg"), nil).build'
 ```
 
-The tarball lands in `pkg/` (git-ignored). `.pdkignore` and `.pmtignore` keep `spec/`, `tests/`, `.github/`, `.planning/`, and similar development files out of the package. Packaging notes and release gates are in [FORGE_READINESS.md](FORGE_READINESS.md). The module deliberately keeps its small hand-maintained `Gemfile` and specs rather than being converted with `pdk convert`.
+The tarball lands in `pkg/` (git-ignored). The builder (`puppet-modulebuilder`, used by both `pdk build` and CI) uses an **allowlist**: it ships only `manifests/`, `templates/`, `types/`, `files/`, `data/`, `plans/`, `tasks/`, `examples/`, `docs/`, `hiera.yaml`, `metadata.json`, `README*`, `CHANGELOG*`, `LICENSE` and `REFERENCE.md`, and it does **not** read `.pdkignore` or `.pmtignore`. Development material (`spec/`, `tests/`, `tools/`, `litellm/`, `.planning/`, `assets/`) stays out because it is outside the allowlist; to keep something out of the package, put it outside those paths (that is why the README graphic lives in `assets/`, not `docs/`). Packaging notes and release gates are in [FORGE_READINESS.md](FORGE_READINESS.md). The module deliberately keeps its small hand-maintained `Gemfile` and specs rather than being converted with `pdk convert`.
 
 ## Code style
 

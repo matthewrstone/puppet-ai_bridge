@@ -23,7 +23,7 @@
 
 PE is configured with a URL and an API key and asks for a fixed OpenAI model name. The bridge accepts that name and forwards the request to the provider you choose.
 
-![User asks PE Infra Assist, which connects through LiteLLM powered by ai_bridge to a choice of Claude, OpenAI, Gemini, Ollama, Grok, Amazon Bedrock and other providers.](https://raw.githubusercontent.com/matthewrstone/puppet-ai_bridge/main/docs/images/pe-llm-choice.png)
+![User asks PE Infra Assist, which connects through LiteLLM powered by ai_bridge to a choice of Claude, OpenAI, Gemini, Ollama, Grok, Amazon Bedrock and other providers.](https://raw.githubusercontent.com/matthewrstone/puppet-ai_bridge/main/assets/pe-llm-choice.png)
 
 This is an experimental community module. It is not a Puppet Supported product. LiteLLM is downloaded separately as an upstream container; this module's Apache-2.0 license does not relicense LiteLLM, its enterprise components, or any backend model. See the [third-party notices](https://github.com/matthewrstone/puppet-ai_bridge/blob/main/docs/THIRD_PARTY_NOTICES.md).
 
