@@ -1,5 +1,9 @@
 stages: [test]
 
+variables:
+  # PDK 4 Gemfiles default to the credentialed puppetcore source; use public RubyGems in CI.
+  BUNDLE_GEMSOURCE__PUBLIC: "true"
+
 go-test:
   stage: test
   image: golang:1.24

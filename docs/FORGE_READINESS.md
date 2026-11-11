@@ -204,11 +204,13 @@ normalization, existing usage callbacks and Docker runtime unit cases.
 ## 0.1.4 candidate (unreleased)
 
 Candidate archive `pkg/souldo-ai_bridge-0.1.4.tar.gz` built with `puppet-modulebuilder` 2.1.0:
-62 files, 1,227,096 bytes, SHA-256 `6b31f63bc34fc09b0c7e71cfbdcf23eec103af20054ae8fb2899c50cdcb34b3f`
-(rebuild changes this if any file changes). No `.pyc`, `._*`, `.yardoc`, planning, spec, test,
+62 files, 1,227,307 bytes, SHA-256 `7dcb44cc940eace61d1404a6ade61c50ec817e5556218ae4b3042f431ff3094e`
+(rebuilt with `pdk build` after the PDK conversion; the file list is identical to the earlier
+modulebuilder candidate, and `metadata.json` gained PDK template keys; rebuilding changes this if any file changes). No `.pyc`, `._*`, `.yardoc`, planning, spec, test,
 credential or capture files in the archive; `REFERENCE.md` and the new callback files are present.
 
-Local gate: 44 catalog examples; 4 Bolt plan examples (`BOLT_TESTS=true`); Python unit suites
+Local gate: `pdk validate` (0 findings) and `pdk test unit` (45 examples) on PDK 4.0.1; CI-style runs of
+the Puppet 7, Puppet 8 and Bolt jobs with public gems; 44-45 catalog examples; 4 Bolt plan examples (`BOLT_TESTS=true`); Python unit suites
 (usage, personality, tool-call compat, Bolt parameters, Docker runtime); 14 real-callback runtime
 tests in the pinned LiteLLM image; Go race tests (80.1% coverage); `puppet parser validate`,
 `puppet epp validate`, `metadata-json-lint`; `puppet-lint --relative --fail-on-warnings` (with the
@@ -218,3 +220,13 @@ Field evidence: the unreleased build ran on the lab (PE 2026.0.0, Gemma 4 12B on
 `tool_call_compat: true` and produced a correct inventory answer; see
 `.planning/FIELD-TEST-2026-11-11.md`. PE 2025.x behavior with this build, provider switching,
 failure injection and removal remain untested.
+
+## PDK conversion — 2026-11-11 (supersedes "CI validation approach" above)
+
+The module was converted with PDK 4.0.1 so `pdk validate`, `pdk test unit` and `pdk build` work.
+`pdk convert` overwrites `.gitignore`, `.pdkignore` and the `Gemfile`, so the project's secret/capture
+ignores, package exclusions and test setup are declared in `.sync.yml` and `.rubocop_todo.yml`
+and verified after conversion (package file list unchanged). CI now sets
+`BUNDLE_GEMSOURCE__PUBLIC=true` (and `BOLT_GEM_VERSION` for the Bolt job) because PDK 4's Gemfile
+otherwise requires puppetcore credentials. Catalog specs were autocorrected by RuboCop; several
+opinionated RSpec cops are disabled in `.rubocop_todo.yml` for catalog-style specs.

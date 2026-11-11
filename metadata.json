@@ -30,5 +30,8 @@
     "anthropic",
     "ollama",
     "proxy"
-  ]
+  ],
+  "pdk-version": "4.0.1",
+  "template-url": "pdk-default#4.0.1",
+  "template-ref": "tags/4.0.1-0-g826bc75"
 }

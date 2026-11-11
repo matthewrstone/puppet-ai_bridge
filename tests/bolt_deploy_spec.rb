@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require 'rspec'
 require 'bolt_spec/plans'
 
@@ -14,7 +15,7 @@ describe 'ai_bridge::deploy' do
 
   let(:parameters) do
     { 'targets' => ['test.example.net'], 'config' => { 'master_key' => 'test-key', 'backend' => 'ollama',
-      'upstream_model' => 'test-model', 'upstream_base_url' => 'http://localhost:11434', 'manage_tls' => false } }
+                                                       'upstream_model' => 'test-model', 'upstream_base_url' => 'http://localhost:11434', 'manage_tls' => false } }
   end
 
   it 'checks an existing runtime by default and applies the module' do

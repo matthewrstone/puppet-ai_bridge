@@ -1,0 +1,11 @@
+# Project-specific RuboCop relaxations (inherited via .sync.yml include_todos).
+# Catalog specs assert several properties of one compiled catalog per example and rely on the
+# implicit subject; PDK's defaults only relax these for generated provider specs.
+RSpec/ExampleLength:
+  Enabled: false
+RSpec/MultipleExpectations:
+  Enabled: false
+RSpec/NamedSubject:
+  Enabled: false
+RSpec/ContextWording:
+  Enabled: false

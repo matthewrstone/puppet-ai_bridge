@@ -13,6 +13,7 @@ jobs:
         puppet: ['~> 7.0', '~> 8.0']
     env:
       PUPPET_GEM_VERSION: ${{ matrix.puppet }}
+      BUNDLE_GEMSOURCE__PUBLIC: 'true'
     steps:
       - uses: actions/checkout@v4
       - uses: ruby/setup-ruby@v1
@@ -28,7 +29,9 @@ jobs:
     runs-on: ubuntu-24.04
     env:
       BOLT_TESTS: 'true'
+      BOLT_GEM_VERSION: '= 4.0.0'
       PUPPET_GEM_VERSION: '~> 8.0'
+      BUNDLE_GEMSOURCE__PUBLIC: 'true'
     steps:
       - uses: actions/checkout@v4
       - uses: ruby/setup-ruby@v1

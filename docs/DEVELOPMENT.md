@@ -175,5 +175,14 @@ python3 -B -m unittest discover -s tests -p test_pe_usage.py        # pure Pytho
 bundle exec puppet strings generate --format markdown --out REFERENCE.md   # regenerate the parameter reference
 ```
 
-Runtime callback tests (`tests/*runtime.py`) need the pinned LiteLLM image; see [Forge readiness](FORGE_READINESS.md). This module is intentionally not PDK-converted, so `pdk validate` refuses to run; use `puppet-lint --relative --fail-on-warnings manifests types plans` and `metadata-json-lint metadata.json` instead.
+Runtime callback tests (`tests/*runtime.py`) need the pinned LiteLLM image; see [Forge readiness](FORGE_READINESS.md).
 
+The module is PDK-converted (PDK 4.0.1). Project-specific settings live in `.sync.yml` and `.rubocop_todo.yml`, so edit those and run `pdk convert --force` (or `pdk update`) instead of editing the generated `.gitignore`, `.pdkignore`, `Gemfile` or `.rubocop.yml` by hand.
+
+```bash
+pdk validate          # puppet-lint, metadata, syntax, YAML, RuboCop
+pdk test unit         # catalog specs
+pdk build --force     # builds pkg/souldo-ai_bridge-<version>.tar.gz
+```
+
+PDK 4's `Gemfile` pulls Puppet from the credentialed `rubygems-puppetcore.puppet.com` source. Either export a puppetcore token (`BUNDLE_RUBYGEMS___PUPPETCORE__PUPPET__COM=forge-key:<token>`) or use public RubyGems with `BUNDLE_GEMSOURCE__PUBLIC=true`; CI uses the latter, and `PUPPET_GEM_VERSION` still selects the Puppet 7/8 matrix. PDK itself ignores a global `gemsource.public` bundler setting, so the token is the only way to run `pdk validate` locally. On a Mac whose Command Line Tools SDK is newer than its linker, native gems fail to build; export `SDKROOT` pointing at Xcode's own SDK for that command. Bolt specs need `BOLT_TESTS=true BOLT_GEM_VERSION='= 4.0.0'`.

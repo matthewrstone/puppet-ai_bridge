@@ -1,0 +1,29 @@
+---
+# Project-specific additions to PDK-managed files. Edit this file, then run `pdk convert --force`
+# (or `pdk update`) to re-render .gitignore, .pdkignore and the Gemfile.
+.gitignore:
+  paths:
+    - '.env'
+    - '*.jsonl'
+    - '.rspec_system/'
+    - 'tools/pe-capture/pe-capture'
+    - 'litellm/tls/*'
+    - '!litellm/tls/.gitkeep'
+    - 'litellm/capture/*'
+    - '!litellm/capture/.gitkeep'
+    - '__pycache__/'
+    - '*.pyc'
+    - '.planning/tmp/'
+.pdkignore:
+  paths:
+    - '/.planning/'
+    - '/tests/'
+    - '/tools/'
+    - '/litellm/'
+    - '/.gitlab-ci.yml'
+    - '**/__pycache__/'
+    - '*.pyc'
+# Bolt: PDK's Gemfile always declares it; CI pins it with BOLT_GEM_VERSION.
+# RuboCop relaxations for this project live in .rubocop_todo.yml (see that file for why).
+.rubocop.yml:
+  include_todos: true

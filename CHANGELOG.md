@@ -15,6 +15,7 @@
 - Test gaps closed: non-Ollama primary never receives `think`; Bolt parameter test asserts the
   `gpt-5.4-mini` alias.
 - Align `epp()` hash arguments with puppet-lint `strict_indent`.
+- Convert the module to PDK 4.0.1 (`pdk validate`, `pdk test unit` and `pdk build` now work); CI uses public RubyGems.
 
 ## 0.1.3 — 2026-11-11
 

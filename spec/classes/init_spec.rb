@@ -27,17 +27,17 @@ describe 'ai_bridge' do
     it { is_expected.to contain_class('ai_bridge::config').that_notifies('Class[ai_bridge::service]') }
 
     it 'creates a locked system user' do
-      is_expected.to contain_user('ai_bridge').with(
+      expect(subject).to contain_user('ai_bridge').with(
         'system' => true, 'shell' => '/sbin/nologin', 'home' => '/opt/ai_bridge',
       )
     end
 
     it 'installs podman by default' do
-      is_expected.to contain_package('podman').with_ensure('installed')
+      expect(subject).to contain_package('podman').with_ensure('installed')
     end
 
     it 'writes an env file with secrets, mode 0600' do
-      is_expected.to contain_file('/opt/ai_bridge/ai_bridge.env').with(
+      expect(subject).to contain_file('/opt/ai_bridge/ai_bridge.env').with(
         'owner' => 'ai_bridge', 'group' => 'ai_bridge', 'mode' => '0600', 'show_diff' => false,
       )
       content = catalogue.resource('file', '/opt/ai_bridge/ai_bridge.env').send(:parameters)[:content]
@@ -48,9 +48,9 @@ describe 'ai_bridge' do
     end
 
     it 'renders a LiteLLM config aliasing o4-mini to the anthropic model' do
-      is_expected.to contain_file('/opt/ai_bridge/config.yaml').with_mode('0640')
+      expect(subject).to contain_file('/opt/ai_bridge/config.yaml').with_mode('0640')
       content = catalogue.resource('file', '/opt/ai_bridge/config.yaml')[:content]
-      expect(content).to match(/model_name: o4-mini\n\s+litellm_params:\n\s+model: anthropic\/claude-sonnet-4-5/)
+      expect(content).to match(%r{model_name: o4-mini\n\s+litellm_params:\n\s+model: anthropic/claude-sonnet-4-5})
       expect(content).to include('api_key: os.environ/ANTHROPIC_API_KEY')
       expect(content).to include('drop_params: true')
       expect(content).to include('master_key: os.environ/LITELLM_MASTER_KEY')
@@ -64,14 +64,14 @@ describe 'ai_bridge' do
     end
 
     it 'manages the TLS cert and key with safe perms' do
-      is_expected.to contain_file('/opt/ai_bridge/tls/server.crt').with_mode('0644')
-      is_expected.to contain_file('/opt/ai_bridge/tls/server.key').with(
+      expect(subject).to contain_file('/opt/ai_bridge/tls/server.crt').with_mode('0644')
+      expect(subject).to contain_file('/opt/ai_bridge/tls/server.key').with(
         'mode' => '0600', 'owner' => 'ai_bridge', 'show_diff' => false,
       )
     end
 
     it 'runs the container under systemd with hardening flags' do
-      is_expected.to contain_file('/etc/systemd/system/ai_bridge.service').with_mode('0644')
+      expect(subject).to contain_file('/etc/systemd/system/ai_bridge.service').with_mode('0644')
       unit = catalogue.resource('file', '/etc/systemd/system/ai_bridge.service')[:content]
       expect(unit).to include('ExecStart=/usr/bin/podman run')
       expect(unit).to include('--read-only')
@@ -83,11 +83,11 @@ describe 'ai_bridge' do
       expect(unit).to include('--ssl_keyfile_path=/app/tls/server.key')
       expect(unit).to include('ghcr.io/berriai/litellm:main-stable')
       expect(unit).to include('User=ai_bridge')
-      is_expected.to contain_service('ai_bridge').with('ensure' => 'running', 'enable' => true)
+      expect(subject).to contain_service('ai_bridge').with('ensure' => 'running', 'enable' => true)
     end
 
     it 'does not expose Restart=no and reloads systemd' do
-      is_expected.to contain_exec('ai_bridge-systemd-reload').with_refreshonly(true)
+      expect(subject).to contain_exec('ai_bridge-systemd-reload').with_refreshonly(true)
     end
   end
 
@@ -99,6 +99,7 @@ describe 'ai_bridge' do
     end
 
     it { is_expected.to compile.with_all_deps }
+
     it 'aliases to openai/<model> and ships OPENAI_API_KEY' do
       content = catalogue.resource('file', '/opt/ai_bridge/config.yaml')[:content]
       expect(content).to include('model: openai/gpt-5-mini')
@@ -113,11 +114,12 @@ describe 'ai_bridge' do
     let(:params) do
       base_params.merge(
         'backend' => 'ollama', 'upstream_model' => 'qwen3:32b',
-        'upstream_base_url' => 'http://ollama.souldo.lan:11434',
+        'upstream_base_url' => 'http://ollama.souldo.lan:11434'
       )
     end
 
     it { is_expected.to compile.with_all_deps }
+
     it 'uses ollama_chat/ with api_base and no api_key' do
       content = catalogue.resource('file', '/opt/ai_bridge/config.yaml')[:content]
       expect(content).to include('model: ollama_chat/qwen3:32b')
@@ -130,11 +132,12 @@ describe 'ai_bridge' do
     let(:params) do
       base_params.merge(
         'backend' => 'openai_compatible', 'upstream_model' => 'Qwen/Qwen3-32B',
-        'upstream_base_url' => 'http://vllm.souldo.lan:8000/v1', 'upstream_api_key' => sensitive('tok'),
+        'upstream_base_url' => 'http://vllm.souldo.lan:8000/v1', 'upstream_api_key' => sensitive('tok')
       )
     end
 
     it { is_expected.to compile.with_all_deps }
+
     it 'uses openai/ prefix, api_base and UPSTREAM_API_KEY' do
       content = catalogue.resource('file', '/opt/ai_bridge/config.yaml')[:content]
       expect(content).to include('model: openai/Qwen/Qwen3-32B')
@@ -149,7 +152,7 @@ describe 'ai_bridge' do
         'backend' => 'ollama', 'upstream_model' => 'gemma4:12b',
         'upstream_base_url' => 'http://ollama.souldo.lan:11434',
         'extra_aliases' => { 'gpt-5.4' => 'ollama_chat/gemma4:12b', 'other' => 'openai/example' },
-        'manage_pe_aliases' => false,
+        'manage_pe_aliases' => false
       )
     end
 
@@ -178,7 +181,7 @@ describe 'ai_bridge' do
       base_params.merge(
         'upstream_api_key' => sensitive('k'), 'ollama_think' => false,
         'extra_aliases' => { 'local' => 'ollama_chat/gemma4:12b' },
-        'manage_pe_aliases' => false,
+        'manage_pe_aliases' => false
       )
     end
 
@@ -186,7 +189,7 @@ describe 'ai_bridge' do
       models = YAML.safe_load(catalogue.resource('file', '/opt/ai_bridge/config.yaml')[:content])['model_list']
       expect(models[0]['litellm_params']['model']).to start_with('anthropic/')
       expect(models[0]['litellm_params']).not_to have_key('think')
-      expect(models[1]['litellm_params']['think']).to eq(false)
+      expect(models[1]['litellm_params']['think']).to be(false)
     end
   end
 
@@ -198,7 +201,7 @@ describe 'ai_bridge' do
 
     it 'renders think on o4-mini, gpt-5.4-mini and gpt-5.4' do
       models = YAML.safe_load(catalogue.resource('file', '/opt/ai_bridge/config.yaml')[:content])['model_list']
-      expect(models.map { |m| m['model_name'] }).to eq(%w[o4-mini gpt-5.4-mini gpt-5.4])
+      expect(models.map { |m| m['model_name'] }).to eq(['o4-mini', 'gpt-5.4-mini', 'gpt-5.4'])
       expect(models.map { |m| m['litellm_params']['think'] }).to eq([false, false, false])
     end
   end
@@ -207,8 +210,8 @@ describe 'ai_bridge' do
     let(:params) { base_params.merge('upstream_api_key' => sensitive('k'), 'container_runtime' => 'docker') }
 
     it 'is disabled by default and removes stale callback files' do
-      is_expected.to contain_file('/opt/ai_bridge/tool_call_compat.py').with_ensure('absent')
-      is_expected.to contain_file('/opt/ai_bridge/tool_call_compat_callback.py').with_ensure('absent')
+      expect(subject).to contain_file('/opt/ai_bridge/tool_call_compat.py').with_ensure('absent')
+      expect(subject).to contain_file('/opt/ai_bridge/tool_call_compat_callback.py').with_ensure('absent')
       expect(catalogue.resource('file', '/opt/ai_bridge/config.yaml')[:content]).not_to include('tool_call_compat')
       expect(catalogue.resource('file', '/etc/systemd/system/ai_bridge.service')[:content]).not_to include('tool_call_compat')
     end
@@ -218,9 +221,9 @@ describe 'ai_bridge' do
     let(:params) { base_params.merge('upstream_api_key' => sensitive('k'), 'container_runtime' => 'docker', 'tool_call_compat' => true) }
 
     it 'ships the read-only callback, registers it and mounts it' do
-      is_expected.to compile.with_all_deps
-      is_expected.to contain_file('/opt/ai_bridge/tool_call_compat.py').with_source('puppet:///modules/ai_bridge/tool_call_compat.py')
-      is_expected.to contain_file('/opt/ai_bridge/tool_call_compat_callback.py').with_source('puppet:///modules/ai_bridge/tool_call_compat_callback.py')
+      expect(subject).to compile.with_all_deps
+      expect(subject).to contain_file('/opt/ai_bridge/tool_call_compat.py').with_source('puppet:///modules/ai_bridge/tool_call_compat.py')
+      expect(subject).to contain_file('/opt/ai_bridge/tool_call_compat_callback.py').with_source('puppet:///modules/ai_bridge/tool_call_compat_callback.py')
       config = catalogue.resource('file', '/opt/ai_bridge/config.yaml')[:content]
       expect(YAML.safe_load(config)['litellm_settings']['callbacks']).to eq(['tool_call_compat_callback.proxy_handler'])
       unit = catalogue.resource('file', '/etc/systemd/system/ai_bridge.service')[:content]
@@ -250,7 +253,7 @@ describe 'ai_bridge' do
     end
 
     it 'serves the PE 2025 and PE 2026 model names by default, all pointing at the upstream model' do
-      expect(model_list.map { |m| m['model_name'] }).to eq(%w[o4-mini gpt-5.4-mini gpt-5.4])
+      expect(model_list.map { |m| m['model_name'] }).to eq(['o4-mini', 'gpt-5.4-mini', 'gpt-5.4'])
       expect(model_list.map { |m| m['litellm_params']['model'] }.uniq).to eq(['anthropic/claude-sonnet-4-5'])
     end
 
@@ -267,7 +270,7 @@ describe 'ai_bridge' do
 
       it 'lets the operator win without duplicating names' do
         names = model_list.map { |m| m['model_name'] }
-        expect(names).to eq(%w[o4-mini gpt-5.4-mini gpt-5.4 o3])
+        expect(names).to eq(['o4-mini', 'gpt-5.4-mini', 'gpt-5.4', 'o3'])
         expect(model_list.find { |m| m['model_name'] == 'gpt-5.4' }['litellm_params']['model']).to eq('openai/gpt-5-mini')
       end
     end
@@ -276,7 +279,7 @@ describe 'ai_bridge' do
       let(:params) { super().merge('exposed_model' => 'gpt-5.4') }
 
       it 'does not duplicate the primary name' do
-        expect(model_list.map { |m| m['model_name'] }).to eq(%w[gpt-5.4 gpt-5.4-mini])
+        expect(model_list.map { |m| m['model_name'] }).to eq(['gpt-5.4', 'gpt-5.4-mini'])
       end
     end
   end
@@ -291,8 +294,8 @@ describe 'ai_bridge' do
 
     it 'renders each alias as its own model_list entry' do
       content = catalogue.resource('file', '/opt/ai_bridge/config.yaml')[:content]
-      expect(content).to match(/model_name: o3\n\s+litellm_params:\n\s+model: anthropic\/claude-opus-4-1/)
-      expect(content).to match(/model_name: gpt-4o\n/)
+      expect(content).to match(%r{model_name: o3\n\s+litellm_params:\n\s+model: anthropic/claude-opus-4-1})
+      expect(content).to match(%r{model_name: gpt-4o\n})
     end
   end
 
@@ -300,9 +303,9 @@ describe 'ai_bridge' do
     let(:params) { base_params.merge('upstream_api_key' => sensitive('k'), 'container_runtime' => 'docker', 'normalize_usage' => true) }
 
     it 'ships the read-only compatibility callback and enables it' do
-      is_expected.to compile.with_all_deps
-      is_expected.to contain_file('/opt/ai_bridge/pe_compat.py').with_source('puppet:///modules/ai_bridge/pe_compat.py')
-      is_expected.to contain_file('/opt/ai_bridge/pe_usage.py').with_source('puppet:///modules/ai_bridge/pe_usage.py')
+      expect(subject).to compile.with_all_deps
+      expect(subject).to contain_file('/opt/ai_bridge/pe_compat.py').with_source('puppet:///modules/ai_bridge/pe_compat.py')
+      expect(subject).to contain_file('/opt/ai_bridge/pe_usage.py').with_source('puppet:///modules/ai_bridge/pe_usage.py')
       config = catalogue.resource('file', '/opt/ai_bridge/config.yaml')[:content]
       expect(config).to include('pe_compat.proxy_handler')
       unit = catalogue.resource('file', '/etc/systemd/system/ai_bridge.service')[:content]
@@ -315,8 +318,8 @@ describe 'ai_bridge' do
     let(:params) { base_params.merge('upstream_api_key' => sensitive('k')) }
 
     it 'keeps personality disabled by default and removes stale style files' do
-      is_expected.to contain_file('/opt/ai_bridge/personality.txt').with_ensure('absent')
-      is_expected.to contain_file('/opt/ai_bridge/personality_callback.py').with_ensure('absent')
+      expect(subject).to contain_file('/opt/ai_bridge/personality.txt').with_ensure('absent')
+      expect(subject).to contain_file('/opt/ai_bridge/personality_callback.py').with_ensure('absent')
       expect(catalogue.resource('file', '/opt/ai_bridge/config.yaml')[:content]).not_to include('personality_callback')
       expect(catalogue.resource('file', '/etc/systemd/system/ai_bridge.service')[:content]).not_to include('personality.txt:/app/')
     end
@@ -325,21 +328,21 @@ describe 'ai_bridge' do
   context 'personality and usage normalization enabled together' do
     let(:params) do
       base_params.merge('upstream_api_key' => sensitive('k'), 'container_runtime' => 'docker',
-        'normalize_usage' => true, 'personality_prompt' => "Talk like a pirate\nKeep answers concise.")
+                        'normalize_usage' => true, 'personality_prompt' => "Talk like a pirate\nKeep answers concise.")
     end
 
     it 'ships style as data and mounts both callbacks read-only' do
-      is_expected.to compile.with_all_deps
-      is_expected.to contain_file('/opt/ai_bridge/personality.txt').with(
+      expect(subject).to compile.with_all_deps
+      expect(subject).to contain_file('/opt/ai_bridge/personality.txt').with(
         'content' => "Talk like a pirate\nKeep answers concise.", 'mode' => '0640', 'owner' => 'root', 'show_diff' => false,
       )
-      is_expected.to contain_file('/opt/ai_bridge/personality_callback.py').with_source('puppet:///modules/ai_bridge/personality_callback.py')
-      is_expected.to contain_file('/opt/ai_bridge/personality.py').with_source('puppet:///modules/ai_bridge/personality.py')
+      expect(subject).to contain_file('/opt/ai_bridge/personality_callback.py').with_source('puppet:///modules/ai_bridge/personality_callback.py')
+      expect(subject).to contain_file('/opt/ai_bridge/personality.py').with_source('puppet:///modules/ai_bridge/personality.py')
       config = catalogue.resource('file', '/opt/ai_bridge/config.yaml')[:content]
       expect(config).to include('pe_compat.proxy_handler', 'personality_callback.proxy_handler')
       expect(config).not_to include('Talk like a pirate')
       unit = catalogue.resource('file', '/etc/systemd/system/ai_bridge.service')[:content]
-      %w[personality.txt personality.py personality_callback.py pe_compat.py pe_usage.py].each do |name|
+      ['personality.txt', 'personality.py', 'personality_callback.py', 'pe_compat.py', 'pe_usage.py'].each do |name|
         expect(unit).to include("/opt/ai_bridge/#{name}:/app/#{name}:ro")
       end
       expect(unit.scan('--env PYTHONPATH=/app').length).to eq(1)
@@ -361,15 +364,15 @@ describe 'ai_bridge' do
     let(:params) { base_params.merge('upstream_api_key' => sensitive('k'), 'container_runtime' => 'docker') }
 
     it 'keeps Docker bind-mounted config and TLS readable without DAC capabilities' do
-      %w[/opt/ai_bridge /opt/ai_bridge/tls /opt/ai_bridge/config.yaml /opt/ai_bridge/ai_bridge.env /opt/ai_bridge/tls/server.key].each do |path|
-        is_expected.to contain_file(path).with_owner('root').with_group('root')
+      ['/opt/ai_bridge', '/opt/ai_bridge/tls', '/opt/ai_bridge/config.yaml', '/opt/ai_bridge/ai_bridge.env', '/opt/ai_bridge/tls/server.key'].each do |path|
+        expect(subject).to contain_file(path).with_owner('root').with_group('root')
       end
-      is_expected.to contain_file('/opt/ai_bridge/ai_bridge.env').with_mode('0600')
-      is_expected.to contain_file('/opt/ai_bridge/tls/server.key').with_mode('0600')
+      expect(subject).to contain_file('/opt/ai_bridge/ai_bridge.env').with_mode('0600')
+      expect(subject).to contain_file('/opt/ai_bridge/tls/server.key').with_mode('0600')
     end
 
     it 'installs docker and uses docker run' do
-      is_expected.to contain_package('docker').with_ensure('installed')
+      expect(subject).to contain_package('docker').with_ensure('installed')
       unit = catalogue.resource('file', '/etc/systemd/system/ai_bridge.service')[:content]
       expect(unit).to include('ExecStart=/usr/bin/docker run')
       expect(unit).to include('User=root')
@@ -380,10 +383,11 @@ describe 'ai_bridge' do
     let(:params) { { 'master_key' => sensitive('k'), 'upstream_api_key' => sensitive('k'), 'manage_tls' => false } }
 
     it { is_expected.to compile.with_all_deps }
+
     it 'omits ssl flags and cert files' do
       unit = catalogue.resource('file', '/etc/systemd/system/ai_bridge.service')[:content]
       expect(unit).not_to include('--ssl_certfile_path')
-      is_expected.not_to contain_file('/opt/ai_bridge/tls/server.key')
+      expect(subject).not_to contain_file('/opt/ai_bridge/tls/server.key')
     end
   end
 
@@ -391,31 +395,31 @@ describe 'ai_bridge' do
     context 'anthropic without key' do
       let(:params) { base_params }
 
-      it { is_expected.to compile.and_raise_error(/upstream_api_key is required/) }
+      it { is_expected.to compile.and_raise_error(%r{upstream_api_key is required}) }
     end
 
     context 'ollama without base url' do
       let(:params) { base_params.merge('backend' => 'ollama') }
 
-      it { is_expected.to compile.and_raise_error(/upstream_base_url is required/) }
+      it { is_expected.to compile.and_raise_error(%r{upstream_base_url is required}) }
     end
 
     context 'TLS enabled without cert' do
       let(:params) { { 'master_key' => sensitive('k'), 'upstream_api_key' => sensitive('k') } }
 
-      it { is_expected.to compile.and_raise_error(/tls_cert and tls_key are required/) }
+      it { is_expected.to compile.and_raise_error(%r{tls_cert and tls_key are required}) }
     end
 
     context 'bad backend' do
       let(:params) { base_params.merge('backend' => 'bedrock') }
 
-      it { is_expected.to compile.and_raise_error(/Ai_bridge::Backend/) }
+      it { is_expected.to compile.and_raise_error(%r{Ai_bridge::Backend}) }
     end
 
     context 'master key not Sensitive' do
       let(:params) { base_params.merge('master_key' => 'plain', 'upstream_api_key' => sensitive('k')) }
 
-      it { is_expected.to compile.and_raise_error(/Sensitive/) }
+      it { is_expected.to compile.and_raise_error(%r{Sensitive}) }
     end
   end
 
@@ -423,9 +427,9 @@ describe 'ai_bridge' do
     let(:params) { base_params.merge('upstream_api_key' => sensitive('k'), 'ensure' => 'absent') }
 
     it 'stops the service and removes files' do
-      is_expected.to contain_service('ai_bridge').with('ensure' => 'stopped', 'enable' => false)
-      is_expected.to contain_file('/etc/systemd/system/ai_bridge.service').with_ensure('absent')
-      is_expected.to contain_file('/opt/ai_bridge').with('ensure' => 'absent', 'force' => true)
+      expect(subject).to contain_service('ai_bridge').with('ensure' => 'stopped', 'enable' => false)
+      expect(subject).to contain_file('/etc/systemd/system/ai_bridge.service').with_ensure('absent')
+      expect(subject).to contain_file('/opt/ai_bridge').with('ensure' => 'absent', 'force' => true)
     end
   end
 end
