@@ -2,7 +2,7 @@
 
 **Last updated:** 2026-11-11
 **Current phase:** 5 — Field test (paused after Forge release)
-**Status:** paused
+**Status:** active (0.1.4 prep)
 **Resume file:** .planning/.continue-here.md
 
 ## Where things stand
@@ -26,7 +26,17 @@
 3. Does PE use tool calling? Streaming?
 4. Does PE accept an `http://` URL or require TLS? (Try https first; it's what we want anyway.)
 
-## Next actions
+## Update 2026-11-11 (late)
+
+- Root cause of PE's wrong node count found and fixed in the 0.1.4 dev build: PE's nested
+  PuppetDB call sends tools + strict json_schema; Ollama then never calls the tool. New
+  `tool_call_compat` parameter (default false) drops the schema until a tool result exists.
+  PE inventory-question acceptance passed on gemma4:12b with it enabled (see
+  FIELD-TEST-2026-11-11.md, continuation 3). Lab runs the unreleased 0.1.4 build.
+- 0.1.4 remaining: default PE model aliases, strict_indent lint fixes, Forge-ready README and
+  REFERENCE.md, CHANGELOG, version stamps, rebuild/verify tarball. Do not publish without approval.
+
+## Next actions (superseded items kept for history)
 
 1. Add `gpt-5.4` to the bridge node's authoritative Hiera aliases.
 2. Deploy the released module with `ollama_think: false` for this Gemma deployment;

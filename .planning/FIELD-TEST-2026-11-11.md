@@ -88,3 +88,23 @@ json_schema response_format and no tool-role message yet, drops response_format 
 so the model can call the tool; keep the schema once tool results are present.
 
 Debug reverted via Hiera (debug=false); converge applied, follow-up run idempotent.
+
+## Continuation 3: PE acceptance PASS with tool_call_compat (0.1.4 dev build)
+
+- Deployed the working-tree 0.1.4 build to pe-advanced-01 (backup:
+  /root/ai_bridge-backups/20261111T191435Z-pre014) with ai_bridge::tool_call_compat=true in the
+  bridge eyaml. ai-bridge-01 converged (callbacks: pe_compat, personality_callback,
+  tool_call_compat_callback); second run was a no-op (exit 0).
+- Bridge probe, same shape as PE's nested call: tools+json_schema now returns tool_calls
+  [runPqlQuery]; after a tool result the schema is restored and the answer was valid JSON (17).
+- PE conversation 9c580ce5-0237-4c7a-a0dd-5cdd798bd3c4, "How many nodes are managed?":
+  final answer 18 using nodes[count()] {}. Independent PuppetDB (PE primary client cert) at
+  the time of the check: all nodes 18, active 18, none expired/deactivated. MATCH.
+  The earlier independent count of 17 (same query, hours earlier) was not explained: the 18th
+  node (pkm-cluster-..., catalog_timestamp null) was already shown on the PE Status page then.
+- Bridge trail: 4 requests, all 200 (main, nested tool call, nested after tool result, final).
+  No new errors in infra-assistant.log. UI: thinking cleared, input re-enabled.
+- Model stayed gemma4:12b; the Qwen/tool-tuned comparison on spaceghost was not needed to pass.
+- Still open: provider switching, real capture logging, failure injection, removal, and the
+  full PE 2025.x vs 2026.x model-name matrix. Phase 5 is therefore passed for the inventory
+  tool path only, not complete.
