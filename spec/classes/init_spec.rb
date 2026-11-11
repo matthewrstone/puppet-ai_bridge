@@ -172,6 +172,61 @@ describe 'ai_bridge' do
     end
   end
 
+  context 'Ollama thinking control with a non-Ollama primary' do
+    let(:params) do
+      base_params.merge(
+        'upstream_api_key' => sensitive('k'), 'ollama_think' => false,
+        'extra_aliases' => { 'local' => 'ollama_chat/gemma4:12b' },
+      )
+    end
+
+    it 'never renders think for the non-Ollama primary but still does for Ollama aliases' do
+      models = YAML.safe_load(catalogue.resource('file', '/opt/ai_bridge/config.yaml')[:content])['model_list']
+      expect(models[0]['litellm_params']['model']).to start_with('anthropic/')
+      expect(models[0]['litellm_params']).not_to have_key('think')
+      expect(models[1]['litellm_params']['think']).to eq(false)
+    end
+  end
+
+  context 'tool_call_compat unset' do
+    let(:params) { base_params.merge('upstream_api_key' => sensitive('k'), 'container_runtime' => 'docker') }
+
+    it 'is disabled by default and removes stale callback files' do
+      is_expected.to contain_file('/opt/ai_bridge/tool_call_compat.py').with_ensure('absent')
+      is_expected.to contain_file('/opt/ai_bridge/tool_call_compat_callback.py').with_ensure('absent')
+      expect(catalogue.resource('file', '/opt/ai_bridge/config.yaml')[:content]).not_to include('tool_call_compat')
+      expect(catalogue.resource('file', '/etc/systemd/system/ai_bridge.service')[:content]).not_to include('tool_call_compat')
+    end
+  end
+
+  context 'tool_call_compat enabled' do
+    let(:params) { base_params.merge('upstream_api_key' => sensitive('k'), 'container_runtime' => 'docker', 'tool_call_compat' => true) }
+
+    it 'ships the read-only callback, registers it and mounts it' do
+      is_expected.to compile.with_all_deps
+      is_expected.to contain_file('/opt/ai_bridge/tool_call_compat.py').with_source('puppet:///modules/ai_bridge/tool_call_compat.py')
+      is_expected.to contain_file('/opt/ai_bridge/tool_call_compat_callback.py').with_source('puppet:///modules/ai_bridge/tool_call_compat_callback.py')
+      config = catalogue.resource('file', '/opt/ai_bridge/config.yaml')[:content]
+      expect(YAML.safe_load(config)['litellm_settings']['callbacks']).to eq(['tool_call_compat_callback.proxy_handler'])
+      unit = catalogue.resource('file', '/etc/systemd/system/ai_bridge.service')[:content]
+      expect(unit).to include('--env PYTHONPATH=/app')
+      expect(unit).to include('/opt/ai_bridge/tool_call_compat.py:/app/tool_call_compat.py:ro')
+      expect(unit).to include('/opt/ai_bridge/tool_call_compat_callback.py:/app/tool_call_compat_callback.py:ro')
+    end
+  end
+
+  context 'all callbacks enabled together' do
+    let(:params) do
+      base_params.merge('upstream_api_key' => sensitive('k'), 'container_runtime' => 'docker',
+                        'normalize_usage' => true, 'personality_prompt' => 'Be brief', 'tool_call_compat' => true)
+    end
+
+    it 'registers every callback exactly once' do
+      callbacks = YAML.safe_load(catalogue.resource('file', '/opt/ai_bridge/config.yaml')[:content])['litellm_settings']['callbacks']
+      expect(callbacks).to contain_exactly('pe_compat.proxy_handler', 'personality_callback.proxy_handler', 'tool_call_compat_callback.proxy_handler')
+    end
+  end
+
   context 'extra aliases' do
     let(:params) do
       base_params.merge(

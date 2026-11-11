@@ -37,6 +37,9 @@
 #   The model name PE asks for. PE hard-codes `o4-mini`; change only if PE changes.
 # @param normalize_usage
 #   Opt-in PE usage-detail compatibility defaults; unreported detail fields become zero.
+# @param tool_call_compat
+#   Let models call tools when PE also sends a JSON-schema response format. Drops the
+#   schema from a request until a tool result is present. Enable for PE 2026 with Ollama.
 # @param personality_prompt
 #   Optional response style text appended to chat system instructions. No permissions granted.
 # @param extra_aliases
@@ -92,6 +95,7 @@ class ai_bridge (
   Integer[1]                     $request_timeout   = 300,
   Boolean                        $debug             = false,
   Boolean                        $normalize_usage   = false,
+  Boolean                        $tool_call_compat  = false,
   Optional[String[1]]            $personality_prompt = undef,
   Boolean                        $manage_package    = true,
   Enum['running', 'stopped']     $service_ensure    = 'running',

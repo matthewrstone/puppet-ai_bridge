@@ -52,6 +52,7 @@ class ai_bridge::config {
           request_timeout   => $ai_bridge::request_timeout,
           debug             => $ai_bridge::debug,
           normalize_usage   => $ai_bridge::normalize_usage,
+          tool_call_compat  => $ai_bridge::tool_call_compat,
           personality       => $ai_bridge::personality_prompt != undef,
       }),
     }
@@ -70,6 +71,22 @@ class ai_bridge::config {
         group  => $user,
         mode   => '0644',
         source => 'puppet:///modules/ai_bridge/pe_usage.py',
+      }
+    }
+
+    ['tool_call_compat.py', 'tool_call_compat_callback.py'].each |$filename| {
+      if $ai_bridge::tool_call_compat {
+        file { "${install_dir}/${filename}":
+          ensure => file,
+          owner  => $user,
+          group  => $user,
+          mode   => '0644',
+          source => "puppet:///modules/ai_bridge/${filename}",
+        }
+      } else {
+        file { "${install_dir}/${filename}":
+          ensure => absent,
+        }
       }
     }
 

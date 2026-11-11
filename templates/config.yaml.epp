@@ -9,6 +9,7 @@
       Boolean $debug,
       Boolean $normalize_usage,
       Boolean $personality,
+      Boolean $tool_call_compat,
 | -%>
 # Managed by Puppet (ai_bridge). No secrets in this file: keys come from the env.
 model_list:
@@ -40,13 +41,16 @@ model_list:
 <% } -%>
 
 litellm_settings:
-<% if $normalize_usage or $personality { -%>
+<% if $normalize_usage or $personality or $tool_call_compat { -%>
   callbacks:
 <% if $normalize_usage { -%>
     - pe_compat.proxy_handler
 <% } -%>
 <% if $personality { -%>
     - personality_callback.proxy_handler
+<% } -%>
+<% if $tool_call_compat { -%>
+    - tool_call_compat_callback.proxy_handler
 <% } -%>
 <% } -%>
   drop_params: <%= $drop_params %>
