@@ -1,4 +1,3 @@
-<!-- generated-by: gsd-doc-writer -->
 # Testing — ai_bridge
 
 This module is tested in four layers: Puppet catalogue tests (rspec-puppet), a Bolt plan test, Python unit and callback-runtime tests, and Go tests for the `pe-capture` tool. A final layer of human tests covers what automation cannot: a real PE console, real provider keys, and certificate trust. Those are in [UAT_HUMAN_TESTING.md](UAT_HUMAN_TESTING.md).

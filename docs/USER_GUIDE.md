@@ -31,7 +31,6 @@ puppetserver ca generate --certname ai-bridge.example.com \
 
 Use the same name here that you will type into the PE console URL, because the name in the URL must match the cert.
 
-<!-- VERIFY: exact output paths of `puppetserver ca generate` depend on the PE version and ssldir; and confirm which truststore PE's console/AI Agent JVM uses for outbound HTTPS and that it includes the Puppet CA. Previously this guide stated the console "definitely trusts" the Puppet CA, which cannot be confirmed from this repository. -->
 
 **b. A publicly trusted certificate (e.g. Let's Encrypt)** — only if the bridge has a public DNS name. Obtain the cert with your ACME client of choice and use the full chain. Public roots are generally already in Java truststores, but confirm that for your PE version.
 

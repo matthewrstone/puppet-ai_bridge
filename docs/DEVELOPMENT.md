@@ -1,4 +1,3 @@
-<!-- generated-by: gsd-doc-writer -->
 # Development
 
 This guide is for people changing the `souldo-ai_bridge` Puppet module itself. If you only want to deploy it, start with the [User guide](USER_GUIDE.md) or [Bolt deployment](BOLT_DEPLOYMENT.md). For how the pieces fit together, see [ARCHITECTURE.md](ARCHITECTURE.md); for module settings, see [CONFIGURATION.md](CONFIGURATION.md).

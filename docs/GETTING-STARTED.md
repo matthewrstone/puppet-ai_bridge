@@ -1,4 +1,3 @@
-<!-- generated-by: gsd-doc-writer -->
 # Getting Started
 
 This page takes you from nothing to a working bridge: a Linux host running LiteLLM in a container, answering Puppet Enterprise (PE) AI Agent requests with the model you choose. It is the short path. The [User guide](USER_GUIDE.md) covers the same ground in more depth, including day-2 operations.
@@ -46,9 +45,7 @@ The bridge does no model inference, so 1 vCPU and 1 GB of memory is enough. Avoi
      --subject-alt-names ai-bridge.example.com,ai-bridge
    ```
 
-   Replace `ai-bridge.example.com` with the bridge FQDN. The certificate and private key are normally written under the primary's Puppet SSL directory as `certs/<certname>.pem` and `private_keys/<certname>.pem` (default `/etc/puppetlabs/puppet/ssl/`). <!-- VERIFY: exact output paths of `puppetserver ca generate` depend on the PE version and ssldir setting; not confirmable from this repository -->
-   PE services already trust the Puppet CA, so no truststore change should be needed. <!-- VERIFY: which truststore the PE console JVM uses to validate the bridge certificate, and that it trusts the Puppet CA by default, is PE internals and cannot be confirmed from this repository -->
-
+   Replace `ai-bridge.example.com` with the bridge FQDN. The certificate and private key are normally written under the primary's Puppet SSL directory as `certs/<certname>.pem` and `private_keys/<certname>.pem` (default `/etc/puppetlabs/puppet/ssl/`).   PE services already trust the Puppet CA, so no truststore change should be needed.
    **Option B: a public CA (ACME / Let's Encrypt).** This needs a publicly resolvable DNS name for the bridge host. Obtain the certificate with your ACME client (certbot, acme.sh) and use the full chain file as `tls_cert`. The module does not run ACME or renew certificates, so update Hiera on each renewal and run Puppet.
 
    **Option C: an external TLS proxy.** If you already operate a TLS-terminating proxy or load balancer, set `ai_bridge::manage_tls: false`. The bridge then serves plain HTTP and needs no certificate; the proxy presents the certificate and PE points at the proxy's HTTPS URL. Keep the bridge's plain-HTTP port reachable only from the proxy. Whether PE accepts a plain `http://` URL directly has not been confirmed; do not expose it to untrusted networks.

@@ -201,9 +201,9 @@ missing system messages and repeated application. Twelve tests in the pinned
 LiteLLM 1.106.6 image cover real callback API integration, coexistence with usage
 normalization, existing usage callbacks and Docker runtime unit cases.
 
-## 0.1.5 candidate (unreleased)
+## 0.1.5 release (published 2026-11-11)
 
-Candidate archive `pkg/souldo-ai_bridge-0.1.5.tar.gz` built with `puppet-modulebuilder` 2.1.0:
+Published archive `pkg/souldo-ai_bridge-0.1.5.tar.gz` built with `puppet-modulebuilder` 2.1.0:
 59 entries, 66,269 bytes, SHA-256 `f1848c661643a3ddc579f7e885b538ed44b1e03cc8dacbb8e3f2d22baf7c354b`
 (rebuilt with `pdk build` after the PDK conversion; the file list matches the earlier
 candidate except that the README graphic (moved to `assets/`) is no longer packaged, and `metadata.json`
@@ -217,7 +217,7 @@ tests in the pinned LiteLLM image; Go race tests (80.1% coverage); `puppet parse
 `puppet epp validate`, `metadata-json-lint`; `puppet-lint --relative --fail-on-warnings` (with the
 strict_indent plugin loaded locally); `git diff --check`.
 
-Field evidence: the unreleased build ran on the lab (PE 2026.0.0, Gemma 4 12B on Ollama) with
+Field evidence: the pre-release build (same code) ran on the lab (PE 2026.0.0, Gemma 4 12B on Ollama) with
 `tool_call_compat: true` and produced a correct inventory answer; see
 `.planning/FIELD-TEST-2026-11-11.md`. PE 2025.x behavior with this build, provider switching,
 failure injection and removal remain untested.

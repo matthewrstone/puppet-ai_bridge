@@ -1,4 +1,3 @@
-<!-- generated-by: gsd-doc-writer -->
 # Contributing to ai_bridge
 
 Thanks for helping improve `souldo-ai_bridge`, a Puppet module that deploys an OpenAI-compatible LiteLLM bridge for Puppet Enterprise AI model routing. This project is licensed under the Apache License 2.0, and contributions are accepted under the same license.
