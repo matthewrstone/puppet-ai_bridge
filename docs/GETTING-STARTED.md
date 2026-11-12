@@ -45,7 +45,9 @@ The bridge does no model inference, so 1 vCPU and 1 GB of memory is enough. Avoi
      --subject-alt-names ai-bridge.example.com,ai-bridge
    ```
 
-   Replace `ai-bridge.example.com` with the bridge FQDN. The certificate and private key are normally written under the primary's Puppet SSL directory as `certs/<certname>.pem` and `private_keys/<certname>.pem` (default `/etc/puppetlabs/puppet/ssl/`).   PE services already trust the Puppet CA, so no truststore change should be needed.
+   Replace `ai-bridge.example.com` with the bridge FQDN. The certificate and private key are normally written under the primary's Puppet SSL directory as `certs/<certname>.pem` and `private_keys/<certname>.pem` (default `/etc/puppetlabs/puppet/ssl/`).
+   PE services already trust the Puppet CA, so no truststore change should be needed.
+
    **Option B: a public CA (ACME / Let's Encrypt).** This needs a publicly resolvable DNS name for the bridge host. Obtain the certificate with your ACME client (certbot, acme.sh) and use the full chain file as `tls_cert`. The module does not run ACME or renew certificates, so update Hiera on each renewal and run Puppet.
 
    **Option C: an external TLS proxy.** If you already operate a TLS-terminating proxy or load balancer, set `ai_bridge::manage_tls: false`. The bridge then serves plain HTTP and needs no certificate; the proxy presents the certificate and PE points at the proxy's HTTPS URL. Keep the bridge's plain-HTTP port reachable only from the proxy. Whether PE accepts a plain `http://` URL directly has not been confirmed; do not expose it to untrusted networks.

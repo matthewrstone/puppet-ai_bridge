@@ -20,13 +20,13 @@ This single value is both the bridge's `master_key` and what you paste into the 
 
 PE's console backend is Java; it must trust the bridge's cert. You do **not** need your own certificate authority. Every PE install already has one, so start there.
 
-**a. PE's own CA (recommended)** — sign with the Puppet CA that your PE installation already runs. PE components trust it by default, but see the VERIFY note below.
+**a. PE's own CA (recommended)** — sign with the Puppet CA that your PE installation already runs. PE components trust it by default, but that has not been confirmed for every PE version: check trust with the `curl` test in step 6 before relying on it.
 
 ```sh
 # on the PE primary:
 puppetserver ca generate --certname ai-bridge.example.com \
   --subject-alt-names ai-bridge.example.com
-# the cert and key are written on the primary (see VERIFY below)
+# the cert and key are written on the primary; the exact paths depend on the PE version and ssldir
 ```
 
 Use the same name here that you will type into the PE console URL, because the name in the URL must match the cert.

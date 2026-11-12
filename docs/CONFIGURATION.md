@@ -147,7 +147,8 @@ Use this if you do not have your own internal CA. The PE console already trusts 
    ```
 
    `ai-bridge.example.com` is a placeholder for the bridge FQDN.
-2. Find the generated certificate and private key. They are normally under the Puppet SSL directory on the primary, as `certs/<certname>.pem` and `private_keys/<certname>.pem` (default `/etc/puppetlabs/puppet/ssl/`).3. Copy the PEM contents into Hiera. The certificate is public, so a plain block scalar is fine. Encrypt the key with eyaml:
+2. Find the generated certificate and private key. They are normally under the Puppet SSL directory on the primary, as `certs/<certname>.pem` and `private_keys/<certname>.pem` (default `/etc/puppetlabs/puppet/ssl/`).
+3. Copy the PEM contents into Hiera. The certificate is public, so a plain block scalar is fine. Encrypt the key with eyaml:
 
    ```bash
    eyaml encrypt -l 'ai_bridge::tls_key' -f private_keys/ai-bridge.example.com.pem
@@ -178,6 +179,7 @@ If the bridge hostname is publicly resolvable, you can use a certificate from a 
 1. Obtain the certificate with your ACME client of choice. The module does not run ACME or renew certificates.
 2. Use the full chain file (leaf plus intermediates) as `tls_cert`, and the matching private key as `tls_key` (via eyaml).
 3. The PE JVM trusts common public roots by default, so no truststore change should be needed.
+
 Public CA certificates are short-lived. Update the Hiera values on each renewal and run Puppet; the service restarts when the files change.
 
 ### Option 3: External TLS proxy (`manage_tls: false`)

@@ -1,9 +1,9 @@
 # State
 
 **Last updated:** 2026-11-11
-**Current phase:** 5 — Field test (paused after Forge release)
+**Current phase:** 5 — Field test (inventory path passed; other UAT open)
 **Status:** 0.1.5 published to the Forge (see RELEASE-0.1.5.md); Phase 5 UAT items still open
-**Resume file:** .planning/.continue-here.md
+**Resume file:** none current (.continue-here.md and HANDOFF.json are 0.1.3-era and superseded by this file and RELEASE-0.1.5.md)
 
 ## Where things stand
 
@@ -32,9 +32,11 @@
   PuppetDB call sends tools + strict json_schema; Ollama then never calls the tool. New
   `tool_call_compat` parameter (default false) drops the schema until a tool result exists.
   PE inventory-question acceptance passed on gemma4:12b with it enabled (see
-  FIELD-TEST-2026-11-11.md, continuation 3). Lab runs the unreleased 0.1.5 build.
-- 0.1.5 remaining: default PE model aliases, strict_indent lint fixes, Forge-ready README and
-  REFERENCE.md, CHANGELOG, version stamps, rebuild/verify tarball. Do not publish without approval.
+  FIELD-TEST-2026-11-11.md, continuations 3-4). The lab has the same code installed under the pre-rename
+  0.1.4 label; re-converging it on the published 0.1.5 is pending (SSH agent was unavailable).
+- 0.1.5 is published (RELEASE-0.1.5.md). Candidate 0.1.6 scope: Puppet 9 upper bound + CI job, fuller plan
+  docs, cleaned packaged docs, PE 2026 Ollama example, troubleshooting entries, REFERENCE drift check.
+  Open doc claims to confirm: DOC-VERIFY-ITEMS.md. Do not publish without approval.
 
 ## Next actions (superseded items kept for history)
 

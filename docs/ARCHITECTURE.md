@@ -76,7 +76,9 @@ By default the bridge terminates TLS itself (`manage_tls: true`). PE's console m
 
 Options, in order of preference for a typical PE site:
 
-1. **Puppet CA (default).** Issue the bridge's server certificate from PE's own Puppet CA (for example `puppetserver ca generate --certname <bridge-fqdn>` on the primary), so the bridge's certificate chains to the same CA that PE already uses for its own services. This avoids importing anything into PE.2. **A public CA.** A certificate for the bridge's public DNS name issued by a CA that the PE host's Java runtime already trusts needs no extra trust configuration.3. **An external TLS proxy.** Set `manage_tls: false`, terminate TLS on a reverse proxy or load balancer you already operate, and give PE that proxy's HTTPS URL. The bridge then listens on plain HTTP on `listen_port` and must be reachable only from the proxy.
+1. **Puppet CA (default).** Issue the bridge's server certificate from PE's own Puppet CA (for example `puppetserver ca generate --certname <bridge-fqdn>` on the primary), so the bridge's certificate chains to the same CA that PE already uses for its own services. This avoids importing anything into PE.
+2. **A public CA.** A certificate for the bridge's public DNS name issued by a CA that the PE host's Java runtime already trusts needs no extra trust configuration.
+3. **An external TLS proxy.** Set `manage_tls: false`, terminate TLS on a reverse proxy or load balancer you already operate, and give PE that proxy's HTTPS URL. The bridge then listens on plain HTTP on `listen_port` and must be reachable only from the proxy.
 4. **An internal CA** works the same way as option 2 provided PE trusts it; importing that CA into PE's truststore is the extra step. This is an aside, not a requirement.
 
 `manage_tls: false` without an external proxy leaves plain HTTP on the bridge port and is intended for isolated lab use only.

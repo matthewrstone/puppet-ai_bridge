@@ -6,7 +6,13 @@ Published 2026-11-11 as souldo/ai_bridge (0.1.4 was never published; it was rena
 - Public release: https://forge.puppet.com/modules/souldo/ai_bridge/0.1.5
 - Artifact: pkg/souldo-ai_bridge-0.1.5.tar.gz, 66,269 bytes, 59 entries,
   SHA-256 f1848c661643a3ddc579f7e885b538ed44b1e03cc8dacbb8e3f2d22baf7c354b.
-- Built from commit 77ef9b5 (tag v0.1.5, on remote main). pdk validate 0 findings; pdk test unit 45 examples.
+- Built from the working tree immediately BEFORE commit 77ef9b5 (tag v0.1.5): the archive was built, then its
+  checksum was written into docs/FORGE_READINESS.md and committed. So the tagged tree and the archive differ in
+  that one file. Consequence (immutable): the packaged docs/FORGE_READINESS.md still says "0.1.5 candidate
+  (unreleased)" and quotes an earlier candidate's size/checksum (66,193 bytes, dc8ad373...), not the published
+  f1848c66... artifact. Code, metadata, README, CHANGELOG and REFERENCE are identical to the tag.
+  Lesson for 0.1.6: do not put the archive's own checksum in a packaged file; keep it in .planning/ only.
+- pdk validate 0 findings; pdk test unit 45 examples.
 - Verified after upload: API record version 0.1.5, pdk=true, file_sha256 matches; downloaded archive checksum
   and size match; modules endpoint lists releases [0.1.5, 0.1.3] with current_release 0.1.5.
 - Forge-processed content: README 12,450 chars (no stray HTML comment, image URL is the GitHub assets path),
