@@ -1,53 +1,33 @@
 # State
 
-**Last updated:** 2026-11-11
-**Current phase:** 5 — Field test (inventory path passed; other UAT open)
-**Status:** 0.1.5 published to the Forge (see RELEASE-0.1.5.md); Phase 5 UAT items still open
-**Resume file:** none current (.continue-here.md and HANDOFF.json are 0.1.3-era and superseded by this file and RELEASE-0.1.5.md)
+**Last updated:** 2026-11-12
+**Current release:** 0.1.5 on the Puppet Forge as `souldo/ai_bridge` (see `releases/0.1.5.md`)
+**Current phase:** 5 — Field test (PE 2026 inventory path passed; other UAT open)
 
 ## Where things stand
 
-- Forge release 0.1.3 published as `souldo/ai_bridge` at the user's request after
-  `souldonetworks` publishing authorization failed. Public API metadata and the
-  downloaded archive's SHA-256 were verified. See `RELEASE-0.1.3.md`.
-- Phases 1–4 complete in this repo. All automated tests green (`go test`, `rspec-puppet`, `puppet-lint`).
-- Phase 5 field testing has started on PE 2026.0.0 (`pe-advanced-01`) and the
-  existing Ollama bridge (`ai-bridge-01`). End-to-end acceptance has not passed.
-- PE's PuppetDB tool additionally requests `gpt-5.4`; the deployed aliases only
-  include `o4-mini` and `gpt-5.4-mini`. A temporary alias removed that HTTP 400.
-- Gemma probes returned complete replies with `think=false`; full PE validation
-  remains pending. Puppet reverted temporary bridge config changes and restarted
-  the bridge during the final retest. See `FIELD-TEST-2026-11-11.md` for evidence.
+- Phases 1–4 are complete: capture tool, LiteLLM reference config, Puppet module, docs.
+- Two versions are published: 0.1.3 and 0.1.5. 0.1.4 was a pre-release label and was never
+  published. Published versions are immutable; any content change needs a new version.
+- Phase 5 acceptance passed for one path only: PE 2026.0.0 on Ubuntu 24.04 with Docker and
+  Gemma 4 12B on Ollama answered the managed-node-count question correctly, matching an
+  independent PuppetDB query. This needs `tool_call_compat: true` and `ollama_think: false`
+  for that model. Evidence: `field-tests/2026-11-11.md`.
+- The test lab runs the same code as 0.1.5 but installed under the 0.1.4 label. Re-converging it
+  on the published 0.1.5 package is pending.
 
-## Open questions (resolved by the capture log)
+## What the field test established
 
-1. Does PE validate with `GET /v1/models`, a chat completion, or both?
-2. Does PE send `max_completion_tokens`, `reasoning_effort`, `temperature`, `response_format`?
-3. Does PE use tool calling? Streaming?
-4. Does PE accept an `http://` URL or require TLS? (Try https first; it's what we want anyway.)
+- PE 2025.x requests the model `o4-mini`. PE 2026 requests `gpt-5.4-mini` for chat and
+  `gpt-5.4` for its nested PuppetDB tool call. PE uses both streaming and tool calling.
+- PE's nested PuppetDB request carries a tool and a strict JSON-schema response format. A local
+  model given both may fill the schema directly and never call the tool, inventing the answer.
+- Puppet owns the generated bridge config. Hand edits are reverted on the next agent run and
+  restart the bridge mid-request, so every fix goes through the module and Hiera.
+- An HTTP 200 or progress text in the PE console does not prove a correct answer. Check the
+  final answer against an independent PuppetDB query and the PE logs.
 
-## Update 2026-11-11 (late)
+## Next
 
-- Root cause of PE's wrong node count found and fixed in the 0.1.5 dev build: PE's nested
-  PuppetDB call sends tools + strict json_schema; Ollama then never calls the tool. New
-  `tool_call_compat` parameter (default false) drops the schema until a tool result exists.
-  PE inventory-question acceptance passed on gemma4:12b with it enabled (see
-  FIELD-TEST-2026-11-11.md, continuations 3-4). The lab has the same code installed under the pre-rename
-  0.1.4 label; re-converging it on the published 0.1.5 is pending (SSH agent was unavailable).
-- 0.1.5 is published (RELEASE-0.1.5.md). Candidate 0.1.6 scope: Puppet 9 upper bound + CI job, fuller plan
-  docs, cleaned packaged docs, PE 2026 Ollama example, troubleshooting entries, REFERENCE drift check.
-  Open doc claims to confirm: DOC-VERIFY-ITEMS.md. Do not publish without approval.
-
-## Next actions (superseded items kept for history)
-
-1. Add `gpt-5.4` to the bridge node's authoritative Hiera aliases.
-2. Deploy the released module with `ollama_think: false` for this Gemma deployment;
-   the parameter is implemented and shipped, but not yet deployed to the lab.
-3. Apply Puppet, wait for API readiness, check idempotence, then retry a fresh PE
-   inventory question. Independent PuppetDB count during testing was 17.
-4. Complete remaining UAT, including real capture logging and provider switching.
-
-## Blockers
-
-- Durable model configuration is required before continuing acceptance testing;
-  scheduled Puppet runs revert temporary fixes and interrupt active requests.
+Open work is listed in `BACKLOG.md`. Nothing is published, tagged or pushed without the
+maintainer's approval.

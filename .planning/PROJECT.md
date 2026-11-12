@@ -12,7 +12,7 @@ provider. It accepts requests for `o4-mini` (or any alias you choose) and routes
 
 - **Anthropic** (Claude) — translated by LiteLLM
 - **OpenAI** — a current model such as `gpt-5-mini`, pure rename
-- **Ollama** — a local model on a homelab host
+- **Ollama** — a local model on your own host
 - **Any OpenAI-compatible server** — vLLM, LM Studio, llama.cpp, TGI, PAG, …
 
 PE only ever sees a standard OpenAI API, so no PE code is touched.
@@ -20,7 +20,7 @@ PE only ever sees a standard OpenAI API, so no PE code is touched.
 ## Why
 
 - Unblocks every PE customer hitting the deprecation today, without waiting for a release.
-- Lets Matthew run the PE AI Agent against Claude or local models in the homelab.
+- Lets a PE admin run the AI Agent against Claude or local models on their own infrastructure.
 - Doubles as a demo asset: "PE AI Agent on your own models, air-gapped."
 - Feeds the longer-term PAG story: PE → gateway → governed models.
 
@@ -35,7 +35,7 @@ PE only ever sees a standard OpenAI API, so no PE code is touched.
 4. Exhaustive docs: README, ELI10, user guide, human UAT guide, security notes, design.
 
 **Out (for now):**
-- Modifying PE itself or filing the product bug (Matthew does that internally).
+- Modifying PE itself or filing the product bug (handled separately by the maintainer).
 - A high-availability / multi-replica deployment.
 - Automatic cert issuance from Step CA (documented, cert/key are inputs).
 
@@ -44,8 +44,8 @@ PE only ever sees a standard OpenAI API, so no PE code is touched.
 - TDD: tests written before implementation (Go `testing`, rspec-puppet).
 - Security: secrets only via `Sensitive`, 0600 files, non-root container, TLS on the
   listener, master key required, no request bodies in logs unless explicitly enabled.
-- Container runtime: Podman by default (rootless-friendly), Docker supported.
-- Target OS: EL9 / Ubuntu 22.04+ homelab host, separate from the PE primary.
+- Container runtime: Podman is the class default; Docker is the path with deployment evidence.
+- Target OS: Ubuntu 24.04 host (the only OS claimed in `metadata.json`), separate from the PE primary.
 
 ## Success criteria
 

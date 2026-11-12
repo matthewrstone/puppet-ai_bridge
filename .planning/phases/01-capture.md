@@ -21,7 +21,7 @@ bridge can be configured from evidence rather than guesses.
 - [x] Tests: models list, canned completion, stream, log line shape, redaction, rewrite, forward
 - [x] Implementation
 - [x] Dockerfile (scratch image)
-- [ ] Run against real PE (Matthew)
+- [ ] Run against real PE (human UAT; see docs/UAT_HUMAN_TESTING.md)
 
 ## Acceptance
 - `go test ./...` green.
