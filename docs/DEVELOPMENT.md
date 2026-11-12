@@ -22,15 +22,15 @@ The module has four kinds of code, each with its own toolchain:
    ```bash
    bundle install
    ```
-   Select a Puppet series with `PUPPET_GEM_VERSION` (default `~> 8.0`), for example `PUPPET_GEM_VERSION='~> 7.0' bundle install`. The module declares Puppet `>= 7.0.0 < 9.0.0`, and CI tests 7 and 8.
+   Select a Puppet series with `PUPPET_GEM_VERSION`, for example `PUPPET_GEM_VERSION='~> 7.0' bundle install`. The module declares Puppet `>= 7.0.0 < 9.0.0`, and CI tests 7 and 8.
 3. Link the module into the spec fixtures. `.fixtures.yml` symlinks the checkout as `ai_bridge`:
    ```bash
    bundle exec rake spec_prep
    ```
    This creates `spec/fixtures/modules/`, which is git-ignored.
-4. Optional, only for the Bolt plan specs: Bolt is added to the bundle when `BOLT_TESTS=true` (pinned to `bolt = 4.0.0`):
+4. Optional, only for the Bolt plan specs: pin Bolt to the version CI uses with `BOLT_GEM_VERSION`:
    ```bash
-   BOLT_TESTS=true PUPPET_GEM_VERSION='~> 8.0' bundle install
+   BOLT_GEM_VERSION='= 4.0.0' PUPPET_GEM_VERSION='~> 8.0' bundle install
    ```
 
 The Python helpers and the Go utility need no install step beyond a Python 3 and a Go toolchain.
@@ -73,11 +73,12 @@ There is no `package.json`; the module is driven by Rake tasks from `puppetlabs_
 | `bundle exec rake spec_prep` | Create `spec/fixtures/modules/ai_bridge` symlink |
 | `bundle exec rake spec_clean` | Remove fixtures created by `spec_prep` |
 | `bundle exec rspec spec/classes/init_spec.rb` | rspec-puppet catalog tests for the `ai_bridge` class |
-| `BOLT_TESTS=true bundle exec rspec tests/bolt_deploy_spec.rb` | Bolt plan tests for `ai_bridge::deploy` |
+| `bundle exec rspec tests/bolt_deploy_spec.rb` | Bolt plan tests for `ai_bridge::deploy` |
 | `python3 -B -m unittest discover -s tests -p test_pe_usage.py` | PE usage-normalization helper tests |
 | `python3 -B -m unittest discover -s tests -p test_personality.py` | Personality helper tests |
 | `python3 -B -m unittest discover -s tests -p test_docker_runtime.py` | Bolt runtime task tests |
 | `python3 -B -m unittest discover -s tests -p test_bolt_parameters.py` | Bolt parameter helper tests |
+| `python3 -B -m unittest discover -s tests -p test_tool_call_compat.py` | Tool-call compatibility helper tests |
 | `cd tools/pe-capture && go vet ./... && go test -race -cover ./...` | Go checks for the capture utility |
 
 Packaging is done with the reference module builder, as in the CI `package` job:
@@ -120,7 +121,7 @@ Two suites need extra setup:
     ghcr.io/berriai/litellm@sha256:<digest-from-ci.yml> \
     -B -m unittest discover -s /workspace/tests -p '*runtime.py'
   ```
-- `tests/bolt_deploy_spec.rb` needs `BOLT_TESTS=true` when you run `bundle install`, so Bolt is in the bundle.
+- `tests/bolt_deploy_spec.rb` is tested in CI against Bolt 4.0.0; set `BOLT_GEM_VERSION='= 4.0.0'` when you run `bundle install` to match.
 
 Tests that cannot be automated (a real PE console, real provider keys) are in [UAT_HUMAN_TESTING.md](UAT_HUMAN_TESTING.md).
 
@@ -184,4 +185,4 @@ pdk test unit         # catalog specs
 pdk build --force     # builds pkg/souldo-ai_bridge-<version>.tar.gz
 ```
 
-PDK 4's `Gemfile` pulls Puppet from the credentialed `rubygems-puppetcore.puppet.com` source. Either export a puppetcore token (`BUNDLE_RUBYGEMS___PUPPETCORE__PUPPET__COM=forge-key:<token>`) or use public RubyGems with `BUNDLE_GEMSOURCE__PUBLIC=true`; CI uses the latter, and `PUPPET_GEM_VERSION` still selects the Puppet 7/8 matrix. PDK itself ignores a global `gemsource.public` bundler setting, so the token is the only way to run `pdk validate` locally. On a Mac whose Command Line Tools SDK is newer than its linker, native gems fail to build; export `SDKROOT` pointing at Xcode's own SDK for that command. Bolt specs need `BOLT_TESTS=true BOLT_GEM_VERSION='= 4.0.0'`.
+PDK 4's `Gemfile` pulls Puppet from the credentialed `rubygems-puppetcore.puppet.com` source. Either export a puppetcore token (`BUNDLE_RUBYGEMS___PUPPETCORE__PUPPET__COM=forge-key:<token>`) or use public RubyGems with `BUNDLE_GEMSOURCE__PUBLIC=true`; CI uses the latter, and `PUPPET_GEM_VERSION` still selects the Puppet 7/8 matrix. PDK itself ignores a global `gemsource.public` bundler setting, so the token is the only way to run `pdk validate` locally. On a Mac whose Command Line Tools SDK is newer than its linker, native gems fail to build; export `SDKROOT` pointing at Xcode's own SDK for that command. Bolt specs are tested with `BOLT_GEM_VERSION='= 4.0.0'`.

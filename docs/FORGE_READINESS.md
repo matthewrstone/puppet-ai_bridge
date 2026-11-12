@@ -1,13 +1,19 @@
-# Forge readiness assessment — 2026-11-11
+# Release validation
 
-Verdict: `souldo-ai_bridge` 0.1.3 is prepared as an experimental community
-release. Publication requires a Forge publishing key authorized for the requested
-namespace. PE acceptance testing has not passed; do not present this release as
-validated for production PE conversations or as commercially supported.
+`souldo-ai_bridge` is an experimental community module. The current release is 0.1.5.
+PE acceptance has passed for one path only (PE 2026.0.0, Ubuntu 24.04, Docker, Gemma 4 12B on
+Ollama, inventory question); do not present any release as validated for production PE
+conversations or as commercially supported.
+
+This file is a chronological record. Each section describes the release it names, so older
+sections describe the module as it was then. The newest entries are at the end:
+[0.1.5 release](#015-release-published-2026-11-11) and
+[PDK conversion](#pdk-conversion--2026-11-11-supersedes-ci-validation-approach-above).
+
 This is a community module assessment, not Puppet Supported certification or a
 CIS/ISO compliance assertion. No MCP service is enabled by this change.
 
-## Current release evidence
+## 0.1.3 release evidence
 
 - 35 catalog examples pass on Puppet 7.34.0 and 8.10.0; four Bolt plan examples pass.
 - 17 Python helper tests and 12 tests in the CI-pinned LiteLLM image pass.
@@ -26,7 +32,7 @@ CIS/ISO compliance assertion. No MCP service is enabled by this change.
 - Archive inspection excludes planning files, tests, fixtures, workflow files,
   bytecode, symlinks and credential files; required runtime callbacks are present.
 
-## Known limitations for this experimental release
+## Known limitations at 0.1.3
 
 The deployed lab returned complete short replies with thinking disabled, but
 full PE streaming/tool-call acceptance remains open. Scheduled Puppet runs
@@ -211,7 +217,7 @@ gained PDK template keys; rebuilding changes this if any file changes). No `.pyc
 credential or capture files in the archive; `REFERENCE.md` and the new callback files are present.
 
 Local gate: `pdk validate` (0 findings) and `pdk test unit` (45 examples) on PDK 4.0.1; CI-style runs of
-the Puppet 7, Puppet 8 and Bolt jobs with public gems; 44-45 catalog examples; 4 Bolt plan examples (`BOLT_TESTS=true`); Python unit suites
+the Puppet 7, Puppet 8 and Bolt jobs with public gems; 44-45 catalog examples; 4 Bolt plan examples; Python unit suites
 (usage, personality, tool-call compat, Bolt parameters, Docker runtime); 14 real-callback runtime
 tests in the pinned LiteLLM image; Go race tests (80.1% coverage); `puppet parser validate`,
 `puppet epp validate`, `metadata-json-lint`; `puppet-lint --relative --fail-on-warnings` (with the
@@ -219,7 +225,7 @@ strict_indent plugin loaded locally); `git diff --check`.
 
 Field evidence: the pre-release build (same code) ran on the lab (PE 2026.0.0, Gemma 4 12B on Ollama) with
 `tool_call_compat: true` and produced a correct inventory answer; see
-`.planning/FIELD-TEST-2026-11-11.md`. PE 2025.x behavior with this build, provider switching,
+`.planning/field-tests/2026-11-11.md` in the GitHub repository. PE 2025.x behavior with this build, provider switching,
 failure injection and removal remain untested.
 
 ## PDK conversion — 2026-11-11 (supersedes "CI validation approach" above)

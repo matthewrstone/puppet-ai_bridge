@@ -31,7 +31,7 @@ A ~300-line `net/http` server. Modes:
 - **Forward**: `-upstream` relays after logging; `-rewrite-model` rewrites the `model` field; `-upstream-key` swaps the bearer. This makes it a minimal bridge for the OpenAI→OpenAI case with zero dependencies.
 - `-require-key` for bearer auth, `-cert/-key` for TLS.
 
-Why Go: single static binary, scratch container, no runtime on the box, matches the rest of Matthew's tooling.
+Why Go: single static binary, scratch container, no runtime on the box, matches the maintainer's other tooling.
 
 ### LiteLLM (container)
 Does the heavy lifting: provider translation, tool-call mapping, streaming, `drop_params`. Run with `--config`, no DB, no UI. Pinned image recommended.

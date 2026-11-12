@@ -1,4 +1,4 @@
-# Sales overview graphic
+# Overview graphic
 
 `pe-llm-choice.png` is a widescreen presentation graphic intended for the README
 and reuse in slide decks. Insert the original PNG and preserve its aspect ratio.

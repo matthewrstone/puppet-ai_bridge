@@ -28,7 +28,6 @@ jobs:
   bolt:
     runs-on: ubuntu-24.04
     env:
-      BOLT_TESTS: 'true'
       BOLT_GEM_VERSION: '= 4.0.0'
       PUPPET_GEM_VERSION: '~> 8.0'
       BUNDLE_GEMSOURCE__PUBLIC: 'true'
@@ -52,6 +51,7 @@ jobs:
           python3 -B -m unittest discover -s tests -p test_personality.py
           python3 -B -m unittest discover -s tests -p test_docker_runtime.py
           python3 -B -m unittest discover -s tests -p test_bolt_parameters.py
+          python3 -B -m unittest discover -s tests -p test_tool_call_compat.py
       - uses: actions/setup-go@v5
         with:
           go-version-file: tools/pe-capture/go.mod

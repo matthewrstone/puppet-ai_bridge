@@ -18,7 +18,7 @@ model_list:
   #     model: openai/gpt-5-mini
   #     api_key: os.environ/OPENAI_API_KEY
 
-  # ---- Backend: Ollama (local model in the homelab) --------------------------
+  # ---- Backend: Ollama (local model on your own host) --------------------------
   # `ollama_chat/` (not `ollama/`) uses Ollama's /api/chat endpoint, which is the
   # one that supports tool calling. Pick a model that handles tools well.
   # - model_name: o4-mini
