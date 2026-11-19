@@ -1,6 +1,6 @@
 # Testing — ai_bridge
 
-This module is tested in four layers: Puppet catalogue tests (rspec-puppet), a Bolt plan test, Python unit and callback-runtime tests, and Go tests for the `pe-capture` tool. A final layer of human tests covers what automation cannot: a real PE console, real provider keys, and certificate trust. Those are in [UAT_HUMAN_TESTING.md](UAT_HUMAN_TESTING.md).
+This module is tested in five layers: Puppet catalogue tests (rspec-puppet), a Bolt plan test, Python unit and callback-runtime tests, Go tests for the `pe-capture` tool, and a live Podman deploy test that applies the module on a real systemd host. A final layer of human tests covers what automation cannot: a real PE console, real provider keys, and certificate trust. Those are in [UAT_HUMAN_TESTING.md](UAT_HUMAN_TESTING.md).
 
 ## Test framework and setup
 
@@ -12,6 +12,7 @@ This module is tested in four layers: Puppet catalogue tests (rspec-puppet), a B
 | Python unit tests | `unittest` (standard library) | `tests/test_*.py` | Helper modules in `files/`, the Docker runtime task, and the Bolt parameter script |
 | Callback runtime tests | `unittest` inside the pinned LiteLLM image | `tests/test_pe_compat_runtime.py`, `tests/test_personality_runtime.py` | The callbacks against LiteLLM's real classes |
 | Go tests | `go test` | `tools/pe-capture/proxy_test.go` | The `pe-capture` request-capture proxy |
+| Podman deploy test | Bash, `puppet apply`, systemd, Podman | `tests/acceptance/podman_systemd.sh` | Real rootless Podman deploy under systemd, with TLS |
 | Human UAT | Written procedure | `docs/UAT_HUMAN_TESTING.md` | PE console, provider keys, certificate trust |
 
 ### Prerequisites
@@ -105,6 +106,43 @@ docker run --rm --entrypoint python \
 
 Outside that image these two files fail on `import litellm`. That is expected, and it is why the CI Python step lists the non-runtime files by name rather than discovering everything.
 
+### Podman deploy test (live, destructive)
+
+`tests/acceptance/podman_systemd.sh` applies the module on the host it runs on, so a
+mistake here changes a real machine. It creates the `ai_bridge` user, `/opt/ai_bridge`
+and a systemd unit. **Run it only on a disposable host** (a CI runner or a throwaway VM)
+with systemd and Podman installed. It refuses to run unless `CI=true` or
+`AI_BRIDGE_ACCEPTANCE=1`, and it must run as root.
+
+```bash
+bundle exec rake spec_prep
+sudo env "PATH=$PATH" AI_BRIDGE_ACCEPTANCE=1 PUPPET="bundle exec puppet" \
+  bash tests/acceptance/podman_systemd.sh
+```
+
+In plain terms, it does what an operator would do and checks each result:
+
+1. Writes a throwaway self-signed TLS certificate for `localhost`.
+2. Runs `puppet apply` with the Ollama backend (no real model is needed) and the service stopped.
+3. Pulls the LiteLLM image as `ai_bridge`, in the same clean environment systemd gives the unit.
+4. Runs `puppet apply` again to start the service, then waits for `/health/liveliness` over TLS.
+5. Checks that the unit runs as `ai_bridge`, that every Podman command carries
+   `--cgroup-manager=cgroupfs --events-backend=file`, that `conmon` runs as `ai_bridge`
+   inside `ai_bridge.service`'s cgroup, the secret file modes, and that `config.yaml`
+   holds no master key.
+6. Checks that `/v1/models` lists `o4-mini` with the master key, and that a wrong key is
+   refused. Without a database LiteLLM refuses it with 400 `No connected db.` rather than 401.
+7. Runs `puppet apply` a third time and expects zero changes.
+8. Runs `systemctl restart` (and expects the bridge healthy again), then `systemctl stop`
+   (and expects no `conmon` left behind).
+
+Optional environment: `IMAGE` (defaults to the digest-pinned image CI reviews),
+`MODULEPATH` (defaults to `spec/fixtures/modules`), and `CONTROL=1`. `CONTROL=1` also
+runs the unit *without* the cgroupfs flags and prints what Podman logged. It never
+fails the test. On the CI runner (Ubuntu 24.04, Podman 4.9.3) that control run
+starts after Podman logs `no systemd user session available` and falls back to cgroupfs.
+The flags remove that dependence on Podman's fallback.
+
 ### Go tests (pe-capture)
 
 ```bash
@@ -127,6 +165,7 @@ There is no single wrapper script. To approximate CI locally, run the sections a
 - **`tests/test_docker_runtime.py`** checks `tasks/docker_runtime.py` with mocked subprocesses: an existing Docker is only checked, installation needs explicit consent, only Ubuntu and Debian are supported, and a broken existing daemon is not reconfigured.
 - **`tests/test_bolt_parameters.py`** checks `examples/bolt/create_params.py`: both parameter files are written with mode `0600` and secrets are never printed.
 - **`tests/test_*_runtime.py`** run the real callbacks against LiteLLM's `ModelResponse`, `ModelResponseStream`, and `CustomLogger` classes, including streaming and the interaction between the personality and usage callbacks.
+- **`tests/acceptance/podman_systemd.sh`** deploys the module for real with rootless Podman and checks the steps listed under "Podman deploy test" above.
 - **`tools/pe-capture/proxy_test.go`** checks the capture proxy: `/v1/models`, canned and streamed chat completions, redaction of the `Authorization` header in the log, forwarding with model rewrite, bearer-key enforcement, `/healthz`, and a JSON 404 for unknown paths.
 
 ## Writing new tests
@@ -157,6 +196,7 @@ GitHub Actions: `.github/workflows/ci.yml` (workflow name `Module CI`), triggere
 | `helpers` | The five Python `unittest` commands on Python 3.12, then `gofmt`, `go vet`, and `go test -race -cover` for `tools/pe-capture` |
 | `package` | Builds the module tarball with `puppet-modulebuilder` 2.1.0 and uploads it as the `forge-candidate` artifact |
 | `callback-runtime` | Runs `tests/*runtime.py` inside the pinned LiteLLM image |
+| `podman-systemd` | Runs `tests/acceptance/podman_systemd.sh` on the Ubuntu 24.04 runner (Puppet `~> 8.0`, the runner's Podman), with `CONTROL=1` |
 
 `.gitlab-ci.yml` runs a subset in a single `test` stage: `go-test`, `puppet-lint`, `rspec-puppet`, `yaml-validate` (parses the YAML in `litellm/`, `examples/`, and `data/common.yaml`), and `python-unit`. It notes that the real callback tests run separately in the pinned LiteLLM image, and does not run them itself.
 
@@ -167,7 +207,8 @@ The automated suite verifies what the module generates, not how a live PE and a 
 - **Certificate trust.** PE's AI Agent connects to the bridge over HTTPS, and the PE console's JVM must trust the bridge's certificate. The recommended path is a certificate issued by the Puppet CA, which every PE component already trusts. The tests only check that the certificate and key are written with the right modes. Whether the PE primary actually validates the certificate (for example `curl` from the primary without `-k`, and a successful save in the console) is verified in UAT Test 2. A failure shows up as `PKIX path building failed` in the console; see [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 - **What PE actually sends.** UAT Test 1 uses `pe-capture` to record the real request shape.
 - **Real provider calls.** Claude, OpenAI, and Ollama round trips, backend switching by Hiera alone, failure modes, and removal.
-- **Idempotency on a real node.** A second `puppet agent -t` with zero changes.
+- **Idempotency through a PE agent run.** The Podman deploy test proves a third `puppet apply` makes no changes. A second `puppet agent -t` against a real PE primary is still a UAT step.
+- **Docker on a real node, and operating systems other than Ubuntu 24.04.** The live deploy test covers rootless Podman on the CI runner only.
 
 Follow [UAT_HUMAN_TESTING.md](UAT_HUMAN_TESTING.md) for these. It has setup, steps, expected results, and a sign-off table.
 

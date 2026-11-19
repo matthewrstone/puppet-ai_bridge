@@ -38,6 +38,8 @@ cd tools/pe-capture && go build .
 
 **Setup:** Hiera per `examples/claude.yaml` with real encrypted values. Host classified with `include ai_bridge`.
 
+**Already automated for Podman:** steps 1–4 and 6, `/v1/models` and wrong-key refusal (on `localhost`), and `systemctl restart`/`stop`. The CI job `podman-systemd` runs them on every push (see [TESTING.md](TESTING.md#podman-deploy-test-live-destructive)). Do this test by hand for what CI can't reach: a real PE agent run, the Claude backend with a real key, Docker, and certificate trust from the PE primary.
+
 **Steps**
 1. `puppet agent -t` on the bridge host. Expect no errors; service `ai_bridge` running.
 2. `systemctl status ai_bridge` → active (running), `User=ai_bridge` (podman) in the unit.

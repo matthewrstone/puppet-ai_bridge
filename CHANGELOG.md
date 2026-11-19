@@ -2,10 +2,15 @@
 
 ## Unreleased
 
-- Fix: rootless Podman failed to start the container from the `ai_bridge` system unit because it
-  tried to use the systemd cgroup manager, which needs a per-user systemd session the `nologin`
-  service account does not have. The unit now runs podman with `--cgroup-manager=cgroupfs
-  --events-backend=file`. Docker is unchanged.
+- Fix: rootless Podman ran from the `ai_bridge` system unit with the systemd cgroup manager,
+  which needs a per-user systemd session the `nologin` service account does not have. Podman
+  then logs `no systemd user session available` and relies on falling back to cgroupfs, or fails
+  to start. The unit now runs podman with `--cgroup-manager=cgroupfs --events-backend=file`.
+  Docker is unchanged.
+- Tests: add `tests/acceptance/podman_systemd.sh` and the `podman-systemd` CI job, which apply
+  the module on an Ubuntu 24.04 runner with rootless Podman and TLS and check the live service.
+- Docs: UAT Test 2 now accepts LiteLLM's 400 `No connected db.` for a refused key (seen when no
+  LiteLLM database is configured), alongside 401.
 - Docs: add a security note for CVE-2026-123007 (NGINX HTTP/2 heap overflow) to the external TLS
   proxy section of `docs/CONFIGURATION.md`. The module and the LiteLLM image do not ship NGINX and
   are not affected; operators fronting the bridge with NGINX should upgrade it.
