@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Fix: rootless Podman failed to start the container from the `ai_bridge` system unit because it
+  tried to use the systemd cgroup manager, which needs a per-user systemd session the `nologin`
+  service account does not have. The unit now runs podman with `--cgroup-manager=cgroupfs
+  --events-backend=file`. Docker is unchanged.
 - Docs: add a security note for CVE-2026-123007 (NGINX HTTP/2 heap overflow) to the external TLS
   proxy section of `docs/CONFIGURATION.md`. The module and the LiteLLM image do not ship NGINX and
   are not affected; operators fronting the bridge with NGINX should upgrade it.

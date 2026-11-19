@@ -8,6 +8,15 @@
       Boolean $personality,
       Boolean $tool_call_compat,
 | -%>
+<%-
+  # Rootless podman runs from this system unit as a nologin user with no
+  # systemd user session, so it cannot use the (default) systemd cgroup
+  # manager or journald events. cgroupfs keeps conmon in this unit's cgroup.
+  $cmd = $runtime ? {
+    'podman' => '/usr/bin/podman --cgroup-manager=cgroupfs --events-backend=file',
+    default  => "/usr/bin/${runtime}",
+  }
+-%>
 # Managed by Puppet (ai_bridge)
 [Unit]
 Description=ai_bridge - OpenAI-compatible model bridge for Puppet Enterprise AI Agent
@@ -19,9 +28,9 @@ User=<%= $unit_user %>
 Restart=always
 RestartSec=5
 TimeoutStartSec=300
-ExecStartPre=-/usr/bin/<%= $runtime %> rm -f ai_bridge
-ExecStartPre=/usr/bin/<%= $runtime %> pull <%= $image %>
-ExecStart=/usr/bin/<%= $runtime %> run --rm --name ai_bridge \
+ExecStartPre=-<%= $cmd %> rm -f ai_bridge
+ExecStartPre=<%= $cmd %> pull <%= $image %>
+ExecStart=<%= $cmd %> run --rm --name ai_bridge \
   --read-only --tmpfs /tmp \
   --cap-drop=ALL --security-opt=no-new-privileges \
   --env-file=<%= $install_dir %>/ai_bridge.env \
@@ -50,7 +59,7 @@ ExecStart=/usr/bin/<%= $runtime %> run --rm --name ai_bridge \
   --config=/app/config.yaml --port=<%= $port %><% if $manage_tls { %> \
   --ssl_certfile_path=/app/tls/server.crt --ssl_keyfile_path=/app/tls/server.key<% } %>
 
-ExecStop=/usr/bin/<%= $runtime %> stop -t 10 ai_bridge
+ExecStop=<%= $cmd %> stop -t 10 ai_bridge
 
 [Install]
 WantedBy=multi-user.target

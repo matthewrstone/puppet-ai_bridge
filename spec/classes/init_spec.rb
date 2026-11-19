@@ -73,7 +73,9 @@ describe 'ai_bridge' do
     it 'runs the container under systemd with hardening flags' do
       expect(subject).to contain_file('/etc/systemd/system/ai_bridge.service').with_mode('0644')
       unit = catalogue.resource('file', '/etc/systemd/system/ai_bridge.service')[:content]
-      expect(unit).to include('ExecStart=/usr/bin/podman run')
+      expect(unit).to include('ExecStart=/usr/bin/podman --cgroup-manager=cgroupfs --events-backend=file run')
+      expect(unit).to include('ExecStartPre=/usr/bin/podman --cgroup-manager=cgroupfs --events-backend=file pull')
+      expect(unit).to include('ExecStop=/usr/bin/podman --cgroup-manager=cgroupfs --events-backend=file stop')
       expect(unit).to include('--read-only')
       expect(unit).to include('--cap-drop=ALL')
       expect(unit).to include('--security-opt=no-new-privileges')
@@ -375,6 +377,7 @@ describe 'ai_bridge' do
       expect(subject).to contain_package('docker').with_ensure('installed')
       unit = catalogue.resource('file', '/etc/systemd/system/ai_bridge.service')[:content]
       expect(unit).to include('ExecStart=/usr/bin/docker run')
+      expect(unit).not_to include('--cgroup-manager')
       expect(unit).to include('User=root')
     end
   end
