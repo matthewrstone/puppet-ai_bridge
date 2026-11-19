@@ -16,7 +16,7 @@ progress:
 # State
 
 **Last updated:** 2026-11-19
-**Last activity:** 2026-11-19 - Completed quick task 261119-g4w: rootless Podman cgroupfs fix
+**Last activity:** 2026-11-19 - Quick task 261119-g4w shipped as PR #2
 **Current release:** 0.1.5 on the Puppet Forge as `souldo/ai_bridge` (see `releases/0.1.5.md`)
 **Current phase:** 5 — Field test (PE 2026 inventory path passed; other UAT open)
 
