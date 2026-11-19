@@ -120,9 +120,14 @@ check "config.yaml holds no master key" bash -c "! grep -q '$MASTER_KEY' '$DIR/c
 echo "== 5. API auth"
 models=$(curl -fsS --cacert "$WORK/server.crt" -H "Authorization: Bearer $MASTER_KEY" https://localhost:4000/v1/models || true)
 check "/v1/models lists o4-mini" grep -q '"o4-mini"' <<<"$models"
-code=$(http_code -H 'Authorization: Bearer wrong' https://localhost:4000/v1/models)
-check "wrong key gets 401 (got $code)" test "$code" = 401
-[ "$code" = 401 ] || curl -s --cacert "$WORK/server.crt" -H 'Authorization: Bearer wrong' https://localhost:4000/v1/models | head -c 400; echo
+# LiteLLM without a database answers an unknown key with 400 "No connected db."
+# rather than 401. Either way the key must be refused and no models returned.
+wrong=$(curl -s -w '\n%{http_code}' --cacert "$WORK/server.crt" -H 'Authorization: Bearer wrong' https://localhost:4000/v1/models)
+code=${wrong##*$'\n'}
+check "wrong key is refused with 4xx (got $code)" test "${code:0:1}" = 4
+body=${wrong%$'\n'*}
+no_models() { ! grep -q 'o4-mini' <<<"$body"; }
+check "wrong key gets no model list" no_models
 
 echo "== 6. Idempotence"
 rc=0; apply || rc=$?

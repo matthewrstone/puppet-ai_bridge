@@ -46,14 +46,14 @@ cd tools/pe-capture && go build .
 5. From the PE primary:
    ```sh
    curl -s https://<bridge>:4000/v1/models -H "Authorization: Bearer <master_key>"
-   curl -s https://<bridge>:4000/v1/models -H "Authorization: Bearer wrong"   # expect 401
+   curl -s https://<bridge>:4000/v1/models -H "Authorization: Bearer wrong"   # expect 401, or 400 "No connected db." (no LiteLLM database)
    ```
 6. Run `puppet agent -t` a second time → zero changes (idempotent).
 
 **Record**
 - [ ] First run converged, second run no-op
 - [ ] `/v1/models` lists `o4-mini`
-- [ ] Wrong key → 401
+- [ ] Wrong key refused (401, or 400 `No connected db.`)
 - [ ] Cert validates from the PE primary without `-k`
 
 ---
