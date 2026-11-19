@@ -5,8 +5,10 @@
 - Fix: rootless Podman ran from the `ai_bridge` system unit with the systemd cgroup manager,
   which needs a per-user systemd session the `nologin` service account does not have. Podman
   then logs `no systemd user session available` and relies on falling back to cgroupfs, or fails
-  to start. The unit now runs podman with `--cgroup-manager=cgroupfs --events-backend=file`.
-  Docker is unchanged.
+  to start. The module now writes `<install_dir>/.config/containers/containers.conf` for the
+  service user (`cgroup_manager = "cgroupfs"`, `events_logger = "file"`), so every podman command
+  run as that user avoids the warning, including manual debugging. The unit also passes
+  `--cgroup-manager=cgroupfs --events-backend=file`. Docker is unchanged.
 - Tests: add `tests/acceptance/podman_systemd.sh` and the `podman-systemd` CI job, which apply
   the module on an Ubuntu 24.04 runner with rootless Podman and TLS and check the live service.
 - Docs: UAT Test 2 now accepts LiteLLM's 400 `No connected db.` for a refused key (seen when no

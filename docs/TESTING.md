@@ -129,7 +129,9 @@ In plain terms, it does what an operator would do and checks each result:
 5. Checks that the unit runs as `ai_bridge`, that every Podman command carries
    `--cgroup-manager=cgroupfs --events-backend=file`, that `conmon` runs as `ai_bridge`
    inside `ai_bridge.service`'s cgroup, the secret file modes, and that `config.yaml`
-   holds no master key.
+   holds no master key. It also checks that `containers.conf` sets cgroupfs, and that neither the
+   unit's journal nor a manual `podman ps` run as `ai_bridge` without flags logs
+   `cgroupv2 manager is set to systemd but there is no systemd user session`.
 6. Checks that `/v1/models` lists `o4-mini` with the master key, and that a wrong key is
    refused. Without a database LiteLLM refuses it with 400 `No connected db.` rather than 401.
 7. Runs `puppet apply` a third time and expects zero changes.
@@ -138,7 +140,7 @@ In plain terms, it does what an operator would do and checks each result:
 
 Optional environment: `IMAGE` (defaults to the digest-pinned image CI reviews),
 `MODULEPATH` (defaults to `spec/fixtures/modules`), and `CONTROL=1`. `CONTROL=1` also
-runs the unit *without* the cgroupfs flags and prints what Podman logged. It never
+runs the unit *without* the cgroupfs flags or `containers.conf` and prints what Podman logged. It never
 fails the test. On the CI runner (Ubuntu 24.04, Podman 4.9.3) that control run
 starts after Podman logs `no systemd user session available` and falls back to cgroupfs.
 The flags remove that dependence on Podman's fallback.

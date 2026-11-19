@@ -15,7 +15,7 @@
 #   MODULEPATH  module path holding ai_bridge (default: spec/fixtures/modules).
 #   IMAGE       LiteLLM image (default: the digest-pinned image CI already reviews).
 #   CONTROL=1   also run an informational control: the unit without the cgroupfs
-#               flags. Its result is reported but never fails the test.
+#               flags or containers.conf. Its result is reported but never fails the test.
 set -euo pipefail
 
 if [ "${CI:-}" != "true" ] && [ "${AI_BRIDGE_ACCEPTANCE:-}" != "1" ]; then
@@ -98,6 +98,7 @@ echo "== 2. Pre-pull the image as $USER_NAME (avoids the unit's 300s start timeo
 as_user "podman $FLAGS pull -q '$IMAGE'" >/dev/null
 
 echo "== 3. Second apply starts the service"
+SINCE=$(date '+%Y-%m-%d %H:%M:%S')
 manifest running
 rc=0; apply || rc=$?
 check "second apply converges (exit $rc)" test "$rc" = 2
@@ -116,6 +117,14 @@ fi
 check "ai_bridge.env is 0600 owned by $USER_NAME" test "$(stat -c '%a %U' "$DIR/ai_bridge.env")" = "600 $USER_NAME"
 check "tls/server.key is 0600 owned by $USER_NAME" test "$(stat -c '%a %U' "$DIR/tls/server.key")" = "600 $USER_NAME"
 check "config.yaml holds no master key" bash -c "! grep -q '$MASTER_KEY' '$DIR/config.yaml'"
+
+WARN='cgroupv2 manager is set to systemd but there is no systemd user session'
+no_warn_in_unit() { ! journalctl -u ai_bridge --since "$SINCE" --no-pager | grep -q "$WARN"; }
+check "unit logs no 'no systemd user session' warning" no_warn_in_unit
+check "containers.conf sets cgroupfs for $USER_NAME" grep -q 'cgroup_manager = "cgroupfs"' "$DIR/.config/containers/containers.conf"
+manual_out=$(as_user "podman ps -a" 2>&1 || true)
+no_warn_manual() { ! grep -q "$WARN" <<<"$manual_out"; }
+check "manual 'podman ps' as $USER_NAME (no flags) logs no warning" no_warn_manual
 
 echo "== 5. API auth"
 models=$(curl -fsS --cacert "$WORK/server.crt" -H "Authorization: Bearer $MASTER_KEY" https://localhost:4000/v1/models || true)
@@ -142,7 +151,9 @@ sleep 2
 check "stop leaves no conmon for $USER_NAME" bash -c "! pgrep -u '$USER_NAME' -x conmon >/dev/null"
 
 if [ "${CONTROL:-}" = 1 ]; then
-  echo "== Control (informational): same unit WITHOUT the cgroupfs flags"
+  echo "== Control (informational): same unit WITHOUT the flags or containers.conf"
+  CONF="$DIR/.config/containers/containers.conf"
+  mv "$CONF" "$WORK/containers.conf.bak"
   cp "$UNIT" "$WORK/unit.bak"
   sed -i "s|/usr/bin/podman $FLAGS |/usr/bin/podman |" "$UNIT"
   systemctl daemon-reload
@@ -155,6 +166,7 @@ if [ "${CONTROL:-}" = 1 ]; then
   journalctl -u ai_bridge --since '-3min' --no-pager | grep -iE 'cgroup|systemd|bus|session|events|error|warn' | tail -20 || true
   systemctl stop ai_bridge || true
   cp "$WORK/unit.bak" "$UNIT"
+  mv "$WORK/containers.conf.bak" "$CONF"
   systemctl daemon-reload
 fi
 

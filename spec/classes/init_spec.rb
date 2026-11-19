@@ -36,6 +36,16 @@ describe 'ai_bridge' do
       expect(subject).to contain_package('podman').with_ensure('installed')
     end
 
+    it 'sets cgroupfs and file events for every podman command run as the service user' do
+      conf = '/opt/ai_bridge/.config/containers/containers.conf'
+      expect(subject).to contain_file('/opt/ai_bridge/.config/containers').with_ensure('directory').with_owner('ai_bridge')
+      expect(subject).to contain_file(conf).with('owner' => 'ai_bridge', 'mode' => '0644')
+      content = catalogue.resource('file', conf)[:content]
+      expect(content).to include('[engine]')
+      expect(content).to include('cgroup_manager = "cgroupfs"')
+      expect(content).to include('events_logger = "file"')
+    end
+
     it 'writes an env file with secrets, mode 0600' do
       expect(subject).to contain_file('/opt/ai_bridge/ai_bridge.env').with(
         'owner' => 'ai_bridge', 'group' => 'ai_bridge', 'mode' => '0600', 'show_diff' => false,
@@ -371,6 +381,10 @@ describe 'ai_bridge' do
       end
       expect(subject).to contain_file('/opt/ai_bridge/ai_bridge.env').with_mode('0600')
       expect(subject).to contain_file('/opt/ai_bridge/tls/server.key').with_mode('0600')
+    end
+
+    it 'does not manage a podman containers.conf' do
+      expect(subject).not_to contain_file('/opt/ai_bridge/.config/containers/containers.conf')
     end
 
     it 'installs docker and uses docker run' do

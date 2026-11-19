@@ -222,7 +222,7 @@ Each entry becomes an additional `model_list` item. The target string is used ve
 
 | Setting | Runs as | File owner | Extras |
 |---------|---------|------------|--------|
-| `podman` | `user` (rootless) | `user` | Puppet adds subuid/subgid ranges `200000-265535` to `user` if `/etc/subuid` has no entry |
+| `podman` | `user` (rootless) | `user` | Puppet adds subuid/subgid ranges `200000-265535` to `user` if `/etc/subuid` has no entry. It also writes `<install_dir>/.config/containers/containers.conf` setting `cgroup_manager = "cgroupfs"` and `events_logger = "file"`, because the `nologin` service user has no systemd user session |
 | `docker` | `root` | `root` | Relies on the Docker daemon being present |
 
 The unit runs the container with `--read-only`, `--tmpfs /tmp`, `--cap-drop=ALL` and `--security-opt=no-new-privileges`, and volume mounts carry the `:Z` SELinux relabel flag.
