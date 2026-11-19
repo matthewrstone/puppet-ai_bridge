@@ -120,7 +120,9 @@ check "config.yaml holds no master key" bash -c "! grep -q '$MASTER_KEY' '$DIR/c
 echo "== 5. API auth"
 models=$(curl -fsS --cacert "$WORK/server.crt" -H "Authorization: Bearer $MASTER_KEY" https://localhost:4000/v1/models || true)
 check "/v1/models lists o4-mini" grep -q '"o4-mini"' <<<"$models"
-check "wrong key gets 401" test "$(http_code -H 'Authorization: Bearer wrong' https://localhost:4000/v1/models)" = 401
+code=$(http_code -H 'Authorization: Bearer wrong' https://localhost:4000/v1/models)
+check "wrong key gets 401 (got $code)" test "$code" = 401
+[ "$code" = 401 ] || curl -s --cacert "$WORK/server.crt" -H 'Authorization: Bearer wrong' https://localhost:4000/v1/models | head -c 400; echo
 
 echo "== 6. Idempotence"
 rc=0; apply || rc=$?
