@@ -2,10 +2,10 @@
 gsd_state_version: "1.0"
 current_phase: 5 — Field test (PE 2026 inventory path passed; other UAT open)
 status: unknown
-last_updated: "2026-11-19T17:37:32.932Z"
+last_updated: "2026-11-19T18:06:35.374Z"
 last_activity: 2026-11-19
 last_activity_desc: "Completed quick task 261119-g4w: rootless Podman cgroupfs fix"
-state_head: 2d700853f2a420030ae7938cdcccca188bb0f916
+state_head: ed6813c891752624be1d1eebcbcdd9f62c1910ca
 progress:
   total_phases: 0
   completed_phases: 0
@@ -16,7 +16,7 @@ progress:
 # State
 
 **Last updated:** 2026-11-19
-**Last activity:** 2026-11-19 - Quick task 261119-g4w shipped as PR #2
+**Last activity:** 2026-11-19 - Completed quick task 261119-gt7: automated Podman deploy test (PR #2)
 **Current release:** 0.1.5 on the Puppet Forge as `souldo/ai_bridge` (see `releases/0.1.5.md`)
 **Current phase:** 5 — Field test (PE 2026 inventory path passed; other UAT open)
 
@@ -48,6 +48,7 @@ progress:
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 261119-g4w | Rootless Podman: run unit with cgroupfs cgroup manager and file events backend | 2026-11-19 | 2d70085 | [261119-g4w-fix-rootless-podman-systemd-unit-cgroupf](./quick/261119-g4w-fix-rootless-podman-systemd-unit-cgroupf/) |
+| 261119-gt7 | Automate rootless Podman deploy checks (podman-systemd CI job) | 2026-11-19 | ed6813c | [261119-gt7-automate-rootless-podman-deploy-tests-in](./quick/261119-gt7-automate-rootless-podman-deploy-tests-in/) |
 
 ## Next
 
