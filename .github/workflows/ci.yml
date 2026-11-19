@@ -42,7 +42,7 @@ jobs:
       - run: bundle exec rake spec_prep
       - run: podman --version
       - name: Deploy and check the bridge (with informational control run)
-        run: sudo env "PATH=$PATH" "GEM_HOME=${GEM_HOME:-}" "BUNDLE_GEMFILE=$PWD/Gemfile" PUPPET="bundle exec puppet" CONTROL=1 bash tests/acceptance/podman_systemd.sh
+        run: sudo env "PATH=$PATH" "GEM_HOME=${GEM_HOME:-}" "BUNDLE_GEMFILE=$PWD/Gemfile" "PUPPET_GEM_VERSION=$PUPPET_GEM_VERSION" "BUNDLE_GEMSOURCE__PUBLIC=$BUNDLE_GEMSOURCE__PUBLIC" CI=true PUPPET="bundle exec puppet" CONTROL=1 bash tests/acceptance/podman_systemd.sh
   bolt:
     runs-on: ubuntu-24.04
     env:
