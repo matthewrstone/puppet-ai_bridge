@@ -23,6 +23,8 @@ if [ "${CI:-}" != "true" ] && [ "${AI_BRIDGE_ACCEPTANCE:-}" != "1" ]; then
   exit 2
 fi
 [ "$(id -u)" = 0 ] || { echo "Run as root." >&2; exit 2; }
+# A system unit with User= gets no session variables; match that for the pre-pull.
+unset XDG_RUNTIME_DIR DBUS_SESSION_BUS_ADDRESS
 
 PUPPET=${PUPPET:-puppet}
 MODULEPATH=${MODULEPATH:-spec/fixtures/modules}
@@ -74,7 +76,7 @@ apply() {
   return $rc
 }
 
-as_user() { sudo -u "$USER_NAME" -H sh -c "cd '$DIR' && $*"; }
+as_user() { sudo -u "$USER_NAME" -H env -u XDG_RUNTIME_DIR -u DBUS_SESSION_BUS_ADDRESS sh -c "cd '$DIR' && $*"; }
 
 wait_healthy() {
   for _ in $(seq 1 90); do
