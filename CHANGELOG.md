@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Docs: add a security note for CVE-2026-123007 (NGINX HTTP/2 heap overflow) to the external TLS
+  proxy section of `docs/CONFIGURATION.md`. The module and the LiteLLM image do not ship NGINX and
+  are not affected; operators fronting the bridge with NGINX should upgrade it.
+
 ## 0.1.5 — 2026-11-11
 
 - Add `tool_call_compat` (default `false`): withhold a strict JSON-schema response format from

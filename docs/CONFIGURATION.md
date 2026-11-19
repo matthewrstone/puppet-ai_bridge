@@ -192,6 +192,8 @@ ai_bridge::manage_tls: false
 
 The bridge then serves plain HTTP on `listen_port`, and `tls_cert` and `tls_key` are not needed and not written. Keep the bridge reachable only from the proxy (for example firewall `listen_port` to the proxy host). The proxy must present a certificate the PE JVM trusts, and the PE URL points at the proxy. Whether PE accepts a plain `http://` URL directly has to be tested; do not expose the plain-HTTP port to untrusted networks, because the bearer token and prompts travel unencrypted.
 
+> **Security note: CVE-2026-123007 (NGINX HTTP/2).** If your external proxy is NGINX with HTTP/2 enabled, it is exposed to a heap buffer overflow in `ngx_http_v2_module` (CVSS 3.1 8.1) that can crash workers or allow remote code execution. Upgrade to NGINX Open Source 1.30.7 / 1.31.9 or later (NGINX Plus 37.0.8.1 / 37.3.0.1 or later), or disable HTTP/2 on the listener until you can. See the [F5 advisory](https://my.f5.com/manage/s/article/K000163926). The bridge itself is not affected: neither this module nor the LiteLLM image includes NGINX.
+
 ### Internal CA (aside)
 
 If you already run an internal CA, a certificate from it works the same way as Option 1, provided the PE JVM trusts that CA (or you import it into the PE console truststore).
