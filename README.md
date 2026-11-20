@@ -70,6 +70,7 @@ The class is named `ai_bridge`. Prefer an agentless push? The module includes a 
      ...
    ai_bridge::tls_key: ENC[PKCS7,...]
    ```
+   Store `master_key` and any supplied `upstream_api_key` and `tls_key` encrypted. They must also reach the class as Puppet `Sensitive` values; encrypted eyaml values can still be returned as plain strings. See [Troubleshooting](https://github.com/matthewrstone/puppet-ai_bridge/blob/main/docs/TROUBLESHOOTING.md#puppet-sensitive-key-errors) for the required Hiera conversion.
 4. Classify the bridge host with `include ai_bridge` and run Puppet.
 5. In the PE console, open **Puppet AI Agent settings**:
    - AI service: **Open AI**

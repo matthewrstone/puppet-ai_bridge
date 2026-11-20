@@ -16,9 +16,29 @@ Start with `journalctl -u ai_bridge -n 200 --no-pager` and `curl -sk https://loc
 | `podman: permission denied` / sub-UID errors | Rootless podman needs sub-IDs for the service user | The module adds them via `usermod`; if `/etc/subuid` is managed elsewhere, add `ai_bridge:200000:65536` there |
 | Unit fails with `Error: statfs ... permission denied` on `-v ...:Z` | SELinux relabel on a path it can't label | Keep files under `/opt/ai_bridge` (default), or drop the `,Z` in the template if SELinux is disabled |
 | Puppet: `tls_cert and tls_key are required` | `manage_tls` true without material | Provide both, or set `manage_tls: false` (lab only) |
-| Puppet: `expects a Sensitive` | A key passed as plain String | Wrap in `Sensitive()` or use eyaml (Hiera eyaml values arrive as Sensitive when `ai_bridge::master_key` is looked up with `lookup_options` convert_to Sensitive) — add to your control repo: ```lookup_options: { '^ai_bridge::(master_key|upstream_api_key|tls_key)$': { convert_to: Sensitive } }``` |
+| Puppet: `expects a Sensitive` | A key passed as a plain String | See [Puppet Sensitive key errors](#puppet-sensitive-key-errors) |
 | Second Puppet run restarts the service every time | Something rewrites a file each run (e.g. trailing newline differences in `tls_cert`) | `puppet agent -t --noop` to see which file; normalise the Hiera value |
 | Want to see exactly what PE sends | — | Run `pe-capture` in forward mode in front of the bridge (see compose `capture` profile) |
+
+## Puppet Sensitive key errors
+
+Catalog compilation can fail with an error such as:
+
+```text
+parameter 'master_key' expects a Sensitive[String] value, got String
+parameter 'upstream_api_key' expects a value of type Undef or Sensitive[String], got String
+parameter 'tls_key' expects a value of type Undef or Sensitive[String], got String
+```
+
+`master_key` must be a `Sensitive` string; `upstream_api_key` and `tls_key` must also be `Sensitive` strings when supplied. Store these secrets encrypted in Hiera, for example using eyaml. Encryption protects the stored values, but decrypted eyaml values can still arrive as plain strings. Add the following to your control repo Hiera data to convert them during lookup:
+
+```yaml
+lookup_options:
+  '^ai_bridge::(master_key|upstream_api_key|tls_key)$':
+    convert_to: Sensitive
+```
+
+When passing values directly in Puppet code instead of using Hiera lookup, wrap them with `Sensitive()`. Then run Puppet again. `tls_cert` is a certificate, not a private key, and does not require `Sensitive`.
 
 ## Reading `capture.jsonl`
 
