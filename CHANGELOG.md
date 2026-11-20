@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.6 — 2026-11-20
 
 - Fix: rootless Podman ran from the `ai_bridge` system unit with the systemd cgroup manager,
   which needs a per-user systemd session the `nologin` service account does not have. Podman

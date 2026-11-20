@@ -1,13 +1,14 @@
 # Release validation
 
-`souldo-ai_bridge` is an experimental community module. The current release is 0.1.5.
+`souldo-ai_bridge` is an experimental community module. The current release is 0.1.6.
 PE acceptance has passed for one path only (PE 2026.0.0, Ubuntu 24.04, Docker, Gemma 4 12B on
 Ollama, inventory question); do not present any release as validated for production PE
 conversations or as commercially supported.
 
 This file is a chronological record. Each section describes the release it names, so older
 sections describe the module as it was then. The newest entries are at the end:
-[0.1.5 release](#015-release-published-2026-11-11) and
+[0.1.5 release](#015-release-published-2026-11-11),
+[0.1.6 release](#016-release-2026-11-20) and
 [PDK conversion](#pdk-conversion--2026-11-11-supersedes-ci-validation-approach-above).
 
 This is a community module assessment, not Puppet Supported certification or a
@@ -239,3 +240,13 @@ to keep it out of the package. CI now sets
 `BUNDLE_GEMSOURCE__PUBLIC=true` (and `BOLT_GEM_VERSION` for the Bolt job) because PDK 4's Gemfile
 otherwise requires puppetcore credentials. Catalog specs were autocorrected by RuboCop; several
 opinionated RSpec cops are disabled in `.rubocop_todo.yml` for catalog-style specs.
+
+## 0.1.6 release (2026-11-20)
+
+Patch release. Rootless Podman now runs with the cgroupfs cgroup manager and file events logger (a
+`containers.conf` for the service user plus matching unit flags), fixing the `no systemd user session
+available` failure under the `nologin` account. A new `podman-systemd` CI job applies the module on an
+Ubuntu 24.04 runner with rootless Podman and TLS and checks the live service. Docs add a CVE-2026-123007
+note for operators fronting the bridge with NGINX; the module and the LiteLLM image do not ship NGINX.
+Docker behavior is unchanged. The archive checksum is recorded outside the package (in the GitHub
+repository's `.planning/releases/0.1.6.md`) so this file never quotes a stale value.
