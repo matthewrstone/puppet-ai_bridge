@@ -25,6 +25,24 @@ jobs:
       - run: bundle exec metadata-json-lint metadata.json
       - run: bundle exec rake spec_prep
       - run: bundle exec rspec spec/classes/init_spec.rb
+  podman-systemd:
+    # Real deploy: puppet apply on the runner, rootless Podman under systemd.
+    # See tests/acceptance/podman_systemd.sh. The runner image ships podman and systemd.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      PUPPET_GEM_VERSION: '~> 8.0'
+      BUNDLE_GEMSOURCE__PUBLIC: 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+      - run: bundle exec rake spec_prep
+      - run: podman --version
+      - name: Deploy and check the bridge (with informational control run)
+        run: sudo env "PATH=$PATH" "GEM_HOME=${GEM_HOME:-}" "BUNDLE_GEMFILE=$PWD/Gemfile" "PUPPET_GEM_VERSION=$PUPPET_GEM_VERSION" "BUNDLE_GEMSOURCE__PUBLIC=$BUNDLE_GEMSOURCE__PUBLIC" CI=true PUPPET="bundle exec puppet" CONTROL=1 bash tests/acceptance/podman_systemd.sh
   bolt:
     runs-on: ubuntu-24.04
     env:

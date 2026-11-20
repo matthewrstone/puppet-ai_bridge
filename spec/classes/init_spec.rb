@@ -36,6 +36,16 @@ describe 'ai_bridge' do
       expect(subject).to contain_package('podman').with_ensure('installed')
     end
 
+    it 'sets cgroupfs and file events for every podman command run as the service user' do
+      conf = '/opt/ai_bridge/.config/containers/containers.conf'
+      expect(subject).to contain_file('/opt/ai_bridge/.config/containers').with_ensure('directory').with_owner('ai_bridge')
+      expect(subject).to contain_file(conf).with('owner' => 'ai_bridge', 'mode' => '0644')
+      content = catalogue.resource('file', conf)[:content]
+      expect(content).to include('[engine]')
+      expect(content).to include('cgroup_manager = "cgroupfs"')
+      expect(content).to include('events_logger = "file"')
+    end
+
     it 'writes an env file with secrets, mode 0600' do
       expect(subject).to contain_file('/opt/ai_bridge/ai_bridge.env').with(
         'owner' => 'ai_bridge', 'group' => 'ai_bridge', 'mode' => '0600', 'show_diff' => false,
@@ -73,7 +83,9 @@ describe 'ai_bridge' do
     it 'runs the container under systemd with hardening flags' do
       expect(subject).to contain_file('/etc/systemd/system/ai_bridge.service').with_mode('0644')
       unit = catalogue.resource('file', '/etc/systemd/system/ai_bridge.service')[:content]
-      expect(unit).to include('ExecStart=/usr/bin/podman run')
+      expect(unit).to include('ExecStart=/usr/bin/podman --cgroup-manager=cgroupfs --events-backend=file run')
+      expect(unit).to include('ExecStartPre=/usr/bin/podman --cgroup-manager=cgroupfs --events-backend=file pull')
+      expect(unit).to include('ExecStop=/usr/bin/podman --cgroup-manager=cgroupfs --events-backend=file stop')
       expect(unit).to include('--read-only')
       expect(unit).to include('--cap-drop=ALL')
       expect(unit).to include('--security-opt=no-new-privileges')
@@ -371,10 +383,15 @@ describe 'ai_bridge' do
       expect(subject).to contain_file('/opt/ai_bridge/tls/server.key').with_mode('0600')
     end
 
+    it 'does not manage a podman containers.conf' do
+      expect(subject).not_to contain_file('/opt/ai_bridge/.config/containers/containers.conf')
+    end
+
     it 'installs docker and uses docker run' do
       expect(subject).to contain_package('docker').with_ensure('installed')
       unit = catalogue.resource('file', '/etc/systemd/system/ai_bridge.service')[:content]
       expect(unit).to include('ExecStart=/usr/bin/docker run')
+      expect(unit).not_to include('--cgroup-manager')
       expect(unit).to include('User=root')
     end
   end

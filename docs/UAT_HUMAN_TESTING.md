@@ -38,6 +38,8 @@ cd tools/pe-capture && go build .
 
 **Setup:** Hiera per `examples/claude.yaml` with real encrypted values. Host classified with `include ai_bridge`.
 
+**Already automated for Podman:** steps 1–4 and 6, `/v1/models` and wrong-key refusal (on `localhost`), and `systemctl restart`/`stop`. The CI job `podman-systemd` runs them on every push (see [TESTING.md](TESTING.md#podman-deploy-test-live-destructive)). Do this test by hand for what CI can't reach: a real PE agent run, the Claude backend with a real key, Docker, and certificate trust from the PE primary.
+
 **Steps**
 1. `puppet agent -t` on the bridge host. Expect no errors; service `ai_bridge` running.
 2. `systemctl status ai_bridge` → active (running), `User=ai_bridge` (podman) in the unit.
@@ -46,14 +48,14 @@ cd tools/pe-capture && go build .
 5. From the PE primary:
    ```sh
    curl -s https://<bridge>:4000/v1/models -H "Authorization: Bearer <master_key>"
-   curl -s https://<bridge>:4000/v1/models -H "Authorization: Bearer wrong"   # expect 401
+   curl -s https://<bridge>:4000/v1/models -H "Authorization: Bearer wrong"   # expect 401, or 400 "No connected db." (no LiteLLM database)
    ```
 6. Run `puppet agent -t` a second time → zero changes (idempotent).
 
 **Record**
 - [ ] First run converged, second run no-op
 - [ ] `/v1/models` lists `o4-mini`
-- [ ] Wrong key → 401
+- [ ] Wrong key refused (401, or 400 `No connected db.`)
 - [ ] Cert validates from the PE primary without `-k`
 
 ---
